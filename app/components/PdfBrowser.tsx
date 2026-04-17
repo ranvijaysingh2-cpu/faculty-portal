@@ -16,7 +16,7 @@ interface ApiResponse {
 // ── helpers ────────────────────────────────────────────────────────────────
 
 function unique(arr: string[]): string[] {
-  return [...new Set(arr.filter(Boolean))].sort();
+  return Array.from(new Set(arr.filter(Boolean))).sort();
 }
 
 function friendlyPdfName(raw: string): string {
