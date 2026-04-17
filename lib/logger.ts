@@ -10,18 +10,21 @@ export interface LogEvent {
   test_date?: string;
 }
 
-// Fire-and-forget — never blocks the API response
-export function logEvent(event: LogEvent): void {
+export async function logEvent(event: LogEvent): Promise<void> {
   const url = process.env.ACTIVITY_LOG_URL;
   if (!url) return;
 
-  fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      ...event,
-      timestamp: new Date().toISOString(),
-      _secret: process.env.LOG_SECRET ?? "",
-    }),
-  }).catch(() => {});
+  try {
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...event,
+        timestamp: new Date().toISOString(),
+        _secret: process.env.LOG_SECRET ?? "",
+      }),
+    });
+  } catch {
+    // ignore — don't break the API if logging fails
+  }
 }

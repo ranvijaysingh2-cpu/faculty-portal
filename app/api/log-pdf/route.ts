@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
 
-  logEvent({
+  await logEvent({
     email,
     role: body.role ?? "",
     scope_value: body.scope_value ?? "",

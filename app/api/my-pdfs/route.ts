@@ -41,7 +41,7 @@ export async function GET() {
 
   const result = filterPdfs(allPdfs, userRecord);
 
-  logEvent({
+  await logEvent({
     email,
     role: userRecord.role,
     scope_value: userRecord.scope_value,
