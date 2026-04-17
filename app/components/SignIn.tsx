@@ -24,19 +24,21 @@ export default function SignIn() {
           Sign in with your <strong>@pw.live</strong> account.
         </p>
 
-        <button
-          style={styles.googleBtn}
-          onClick={() => googleSignIn()}
-          onMouseOver={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "#f0f0f0";
-          }}
-          onMouseOut={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "#fff";
-          }}
-        >
-          <GoogleIcon />
-          Continue with Google
-        </button>
+        <form action={googleSignIn}>
+          <button
+            type="submit"
+            style={styles.googleBtn}
+            onMouseOver={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "#f0f0f0";
+            }}
+            onMouseOut={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "#fff";
+            }}
+          >
+            <GoogleIcon />
+            Continue with Google
+          </button>
+        </form>
 
         <p style={styles.note}>Only @pw.live accounts are permitted.</p>
       </div>
