@@ -1,25 +1,6 @@
-import NextAuth from "next-auth";
-import Google from "next-auth/providers/google";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
-  trustHost: true,
-  providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-  ],
-  callbacks: {
-    async signIn({ profile }) {
-      return profile?.email?.endsWith("@pw.live") ?? false;
-    },
-    async session({ session }) {
-      return session;
-    },
-  },
-  pages: {
-    signIn: "/",
-    error: "/",
-  },
-});
+export async function auth() {
+  return getServerSession(authOptions);
+}

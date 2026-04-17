@@ -1,10 +1,11 @@
-import { auth } from "@/auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
-
-export const dynamic = "force-dynamic";
 import { getPdfIndex, getUserAccess } from "@/lib/csv";
 import { filterPdfs } from "@/lib/access";
 import { logEvent } from "@/lib/logger";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   let email: string;
@@ -19,7 +20,7 @@ export async function GET() {
     }
     email = devEmail.toLowerCase();
   } else {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

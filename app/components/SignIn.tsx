@@ -1,16 +1,14 @@
 "use client";
 
-import { googleSignIn } from "@/app/actions";
+import { signIn } from "next-auth/react";
 
 export default function SignIn() {
   return (
     <div style={styles.page}>
-      {/* Background blobs */}
       <div style={{ ...styles.blob, top: "-80px", left: "-80px" }} />
       <div style={{ ...styles.blob, bottom: "-80px", right: "-80px", opacity: 0.5 }} />
 
       <div style={styles.card}>
-        {/* Logo / wordmark */}
         <div style={styles.logoRow}>
           <div style={styles.logoBox}>
             <span style={styles.logoText}>PW</span>
@@ -24,21 +22,15 @@ export default function SignIn() {
           Sign in with your <strong>@pw.live</strong> account.
         </p>
 
-        <form action={googleSignIn}>
-          <button
-            type="submit"
-            style={styles.googleBtn}
-            onMouseOver={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "#f0f0f0";
-            }}
-            onMouseOut={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "#fff";
-            }}
-          >
-            <GoogleIcon />
-            Continue with Google
-          </button>
-        </form>
+        <button
+          style={styles.googleBtn}
+          onClick={() => signIn("google", { callbackUrl: "/" })}
+          onMouseOver={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#f0f0f0"; }}
+          onMouseOut={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#fff"; }}
+        >
+          <GoogleIcon />
+          Continue with Google
+        </button>
 
         <p style={styles.note}>Only @pw.live accounts are permitted.</p>
       </div>
@@ -58,95 +50,15 @@ function GoogleIcon() {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  page: {
-    minHeight: "100vh",
-    background: "#1A1A1A",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-    overflow: "hidden",
-  },
-  blob: {
-    position: "absolute",
-    width: 320,
-    height: 320,
-    borderRadius: "50%",
-    background: "#FFC700",
-    opacity: 0.15,
-    filter: "blur(80px)",
-    pointerEvents: "none",
-  },
-  card: {
-    background: "#fff",
-    borderRadius: 20,
-    padding: "48px 44px",
-    width: "100%",
-    maxWidth: 420,
-    boxShadow: "0 24px 64px rgba(0,0,0,0.4)",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: 20,
-    position: "relative",
-    zIndex: 1,
-  },
-  logoRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-  },
-  logoBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    background: "#FFC700",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoText: {
-    fontWeight: 900,
-    fontSize: 16,
-    color: "#1A1A1A",
-    letterSpacing: -0.5,
-  },
-  brandName: {
-    fontWeight: 700,
-    fontSize: 18,
-    color: "#1A1A1A",
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: 800,
-    color: "#1A1A1A",
-    letterSpacing: -0.5,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#555",
-    textAlign: "center",
-    lineHeight: 1.6,
-  },
-  googleBtn: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    padding: "12px 20px",
-    border: "1.5px solid #ddd",
-    borderRadius: 10,
-    background: "#fff",
-    fontSize: 15,
-    fontWeight: 600,
-    cursor: "pointer",
-    transition: "background 0.15s",
-    color: "#1A1A1A",
-  },
-  note: {
-    fontSize: 12,
-    color: "#999",
-    textAlign: "center",
-  },
+  page: { minHeight: "100vh", background: "#1A1A1A", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" },
+  blob: { position: "absolute", width: 320, height: 320, borderRadius: "50%", background: "#FFC700", opacity: 0.15, filter: "blur(80px)", pointerEvents: "none" },
+  card: { background: "#fff", borderRadius: 20, padding: "48px 44px", width: "100%", maxWidth: 420, boxShadow: "0 24px 64px rgba(0,0,0,0.4)", display: "flex", flexDirection: "column", alignItems: "center", gap: 20, position: "relative", zIndex: 1 },
+  logoRow: { display: "flex", alignItems: "center", gap: 10 },
+  logoBox: { width: 40, height: 40, borderRadius: 10, background: "#FFC700", display: "flex", alignItems: "center", justifyContent: "center" },
+  logoText: { fontWeight: 900, fontSize: 16, color: "#1A1A1A", letterSpacing: -0.5 },
+  brandName: { fontWeight: 700, fontSize: 18, color: "#1A1A1A" },
+  title: { fontSize: 26, fontWeight: 800, color: "#1A1A1A", letterSpacing: -0.5, textAlign: "center" },
+  subtitle: { fontSize: 14, color: "#555", textAlign: "center", lineHeight: 1.6 },
+  googleBtn: { display: "flex", alignItems: "center", justifyContent: "center", width: "100%", padding: "12px 20px", border: "1.5px solid #ddd", borderRadius: 10, background: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", transition: "background 0.15s", color: "#1A1A1A" },
+  note: { fontSize: 12, color: "#999", textAlign: "center" },
 };

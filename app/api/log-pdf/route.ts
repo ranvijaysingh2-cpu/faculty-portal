@@ -1,4 +1,5 @@
-import { auth } from "@/auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { NextRequest, NextResponse } from "next/server";
 import { logEvent } from "@/lib/logger";
 
@@ -8,7 +9,7 @@ export async function POST(req: NextRequest) {
   if (process.env.NODE_ENV === "development") {
     email = process.env.DEV_EMAIL?.trim().toLowerCase() ?? "dev@pw.live";
   } else {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
