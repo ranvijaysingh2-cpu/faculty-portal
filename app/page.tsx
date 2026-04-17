@@ -7,11 +7,12 @@ export default async function Home() {
     return <PdfBrowser />;
   }
 
-  const session = await auth();
-
-  if (!session?.user) {
+  try {
+    const session = await auth();
+    if (!session?.user) return <SignIn />;
+    return <PdfBrowser />;
+  } catch (e) {
+    console.error("[page] auth() failed:", e);
     return <SignIn />;
   }
-
-  return <PdfBrowser />;
 }
