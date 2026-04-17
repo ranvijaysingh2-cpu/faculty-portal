@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 import { NextResponse } from "next/server";
 import { getPdfIndex, getUserAccess } from "@/lib/csv";
 import { filterPdfs } from "@/lib/access";
