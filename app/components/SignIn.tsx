@@ -1,6 +1,6 @@
 "use client";
 
-import { signIn } from "next-auth/react";
+import { googleSignIn } from "@/app/actions";
 
 export default function SignIn() {
   return (
@@ -26,7 +26,7 @@ export default function SignIn() {
 
         <button
           style={styles.googleBtn}
-          onClick={() => signIn("google", { callbackUrl: "/" })}
+          onClick={() => googleSignIn()}
           onMouseOver={(e) => {
             (e.currentTarget as HTMLButtonElement).style.background = "#f0f0f0";
           }}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { signOut } from "next-auth/react";
+import { handleSignOut } from "@/app/actions";
 import type { PdfRecord } from "@/lib/csv";
 
 type Role = "faculty" | "center_head" | "region_head";
@@ -296,7 +296,7 @@ export default function PdfBrowser() {
         </span>
         <button
           style={ftr.signOut}
-          onClick={() => signOut({ callbackUrl: "/" })}
+          onClick={() => handleSignOut()}
         >
           Sign out
         </button>
@@ -423,7 +423,7 @@ function ErrorScreen({ message }: { message: string }) {
             fontWeight: 700,
             cursor: "pointer",
           }}
-          onClick={() => signOut({ callbackUrl: "/" })}
+          onClick={() => handleSignOut()}
         >
           Sign out
         </button>
