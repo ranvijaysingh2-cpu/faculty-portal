@@ -34,6 +34,12 @@ function doPost(e) {
     if (expectedSecret && data._secret !== expectedSecret) {
       return json({ error: "Forbidden" });
     }
+
+    // Special action: trigger weekly report email
+    if (data.action === "send_weekly_report") {
+      sendInactivityReport();
+      return json({ success: true, action: "send_weekly_report" });
+    }
     var ss    = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = getOrCreateLogSheet(ss);
 

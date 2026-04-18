@@ -49,10 +49,14 @@ export async function GET() {
     event_type: "portal_open",
   });
 
+  const adminEmails = (process.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim().toLowerCase());
+  const isAdmin = adminEmails.includes(email);
+
   return NextResponse.json({
     role: result.role,
     scopeValue: result.scopeValue,
     pdfs: result.pdfs,
+    isAdmin,
     user: {
       name: email.split("@")[0],
       email,

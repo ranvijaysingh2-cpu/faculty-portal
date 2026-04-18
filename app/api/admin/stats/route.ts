@@ -106,15 +106,15 @@ export async function GET() {
     .slice(0, 10)
     .map(([batch, opens]) => ({ batch, opens }));
 
-  // Top 10 PDFs
-  const pdfMap: Record<string, number> = {};
+  // PDF opens by center (top 10)
+  const centerMap: Record<string, number> = {};
   activityLog
-    .filter((a) => a.event_type === "pdf_open" && a.pdf_name)
-    .forEach((a) => { pdfMap[a.pdf_name] = (pdfMap[a.pdf_name] ?? 0) + 1; });
-  const topPdfs = Object.entries(pdfMap)
+    .filter((a) => a.event_type === "pdf_open" && a.center)
+    .forEach((a) => { centerMap[a.center] = (centerMap[a.center] ?? 0) + 1; });
+  const byCenter = Object.entries(centerMap)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10)
-    .map(([name, opens]) => ({ name: name.replace(/\.pdf$/i, ""), opens }));
+    .map(([center, opens]) => ({ center, opens }));
 
   // Activity by hour
   const hourMap: number[] = new Array(24).fill(0);
@@ -153,8 +153,8 @@ export async function GET() {
       totalPdfOpens: activityLog.filter((a) => a.event_type === "pdf_open").length,
       dailyActive,
       byRegion,
+      byCenter,
       byBatch,
-      topPdfs,
       byHour,
       recentEvents,
       mostActiveRegion,

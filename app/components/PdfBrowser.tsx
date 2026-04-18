@@ -10,6 +10,7 @@ interface ApiResponse {
   role: Role;
   scopeValue: string;
   pdfs: PdfRecord[];
+  isAdmin: boolean;
   user: { name: string; email: string; image?: string };
 }
 
@@ -181,6 +182,11 @@ export default function PdfBrowser() {
             <span style={hdr.brand}>Physics Wallah</span>
           </div>
           <div style={hdr.userRow}>
+            {data.isAdmin && (
+              <a href="/admin" style={hdr.adminLink}>
+                Admin →
+              </a>
+            )}
             <div style={{ textAlign: "right" }}>
               <div style={hdr.userName}>{data.user.name}</div>
               <div style={hdr.userEmail}>{data.user.email}</div>
@@ -457,6 +463,7 @@ const hdr: Record<string, React.CSSProperties> = {
   userEmail: { fontSize: 11, color: "#aaa" },
   avatar: { width: 34, height: 34, borderRadius: "50%", border: "2px solid #FFC700" },
   avatarFallback: { width: 34, height: 34, borderRadius: "50%", background: "#FFC700", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14, color: "#1A1A1A" },
+  adminLink: { padding: "6px 14px", background: "#FFC700", borderRadius: 8, fontWeight: 700, fontSize: 13, color: "#1A1A1A", textDecoration: "none" },
 };
 
 const main: Record<string, React.CSSProperties> = {
