@@ -36,3 +36,22 @@ export async function getPdfIndex(): Promise<PdfRecord[]> {
 export async function getUserAccess(): Promise<UserAccess[]> {
   return fetchCsv<UserAccess>(process.env.USER_ACCESS_CSV_URL!);
 }
+
+export interface ActivityRecord {
+  timestamp: string;
+  email: string;
+  role: string;
+  scope_value: string;
+  event_type: string;
+  pdf_name: string;
+  batch: string;
+  center: string;
+  region: string;
+  test_date: string;
+}
+
+export async function getActivityLog(): Promise<ActivityRecord[]> {
+  const url = process.env.ACTIVITY_LOG_CSV_URL;
+  if (!url) return [];
+  return fetchCsv<ActivityRecord>(url);
+}
