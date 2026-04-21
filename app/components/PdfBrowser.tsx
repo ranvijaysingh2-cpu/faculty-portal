@@ -70,6 +70,16 @@ export default function PdfBrowser() {
         setData(json);
         setFetchedAt(new Date());
 
+        // Log portal_open once per browser session only
+        if (!sessionStorage.getItem("pw_logged") && json.logMeta) {
+          sessionStorage.setItem("pw_logged", "1");
+          fetch("/api/log-open", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...json.logMeta, email: json.user.email }),
+          }).catch(() => {});
+        }
+
         // pre-select single scope values
         // Auto-select scope for single-value roles
         if (json.role === "faculty" && json.batches?.length === 1) setSelBatch(json.batches[0]);

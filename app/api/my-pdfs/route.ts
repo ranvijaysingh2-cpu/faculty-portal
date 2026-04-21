@@ -3,7 +3,6 @@ import { authOptions } from "@/lib/auth-options";
 import { NextResponse } from "next/server";
 import { getPdfIndex, getFaculty, getHeads } from "@/lib/csv";
 import { filterPdfsForFaculty, filterPdfsForHead } from "@/lib/access";
-import { logEvent } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -50,19 +49,13 @@ export async function GET() {
 
     const result = filterPdfsForFaculty(allPdfs, { role: "faculty", name, email, batches });
 
-    await logEvent({
-      email,
-      role: "faculty",
-      scope_value: batches.join(","),
-      event_type: "portal_open",
-    });
-
     return NextResponse.json({
       role: result.role,
       scopeValue: result.scopeValue,
       batches: result.batches,
       pdfs: result.pdfs,
       isAdmin: isAdmin(email),
+      logMeta: { role: "faculty", scope_value: batches.join(",") },
       user: { name, email, image: null },
     });
   }
@@ -81,19 +74,13 @@ export async function GET() {
       scopeValue: headRecord.scope_value,
     });
 
-    await logEvent({
-      email,
-      role: headRecord.role,
-      scope_value: headRecord.scope_value,
-      event_type: "portal_open",
-    });
-
     return NextResponse.json({
       role: result.role,
       scopeValue: result.scopeValue,
       batches: result.batches,
       pdfs: result.pdfs,
       isAdmin: isAdmin(email),
+      logMeta: { role: headRecord.role, scope_value: headRecord.scope_value },
       user: { name, email, image: null },
     });
   }
