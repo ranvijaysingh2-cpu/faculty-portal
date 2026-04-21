@@ -1,11 +1,17 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { NextResponse } from "next/server";
-import { getPdfIndex, getUserAccess } from "@/lib/csv";
-import { filterPdfs } from "@/lib/access";
+import { getPdfIndex, getFaculty, getHeads } from "@/lib/csv";
+import { filterPdfsForFaculty, filterPdfsForHead } from "@/lib/access";
 import { logEvent } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
+
+function isAdmin(email: string) {
+  return (process.env.ADMIN_EMAILS ?? "")
+    .split(",").map((e) => e.trim().toLowerCase())
+    .includes(email.toLowerCase());
+}
 
 export async function GET() {
   let email: string;
@@ -14,7 +20,7 @@ export async function GET() {
     const devEmail = process.env.DEV_EMAIL?.trim();
     if (!devEmail) {
       return NextResponse.json(
-        { error: "Set DEV_EMAIL in .env.local to a valid email from your user_access sheet." },
+        { error: "Set DEV_EMAIL in .env.local to a valid faculty or head email." },
         { status: 400 }
       );
     }
@@ -27,40 +33,74 @@ export async function GET() {
     email = session.user.email.trim().toLowerCase();
   }
 
-  const [allPdfs, allUsers] = await Promise.all([getPdfIndex(), getUserAccess()]);
+  const [allPdfs, allFaculty, allHeads] = await Promise.all([
+    getPdfIndex(),
+    getFaculty(),
+    getHeads(),
+  ]);
 
-  const userRecord = allUsers.find(
-    (u) => u.email.trim().toLowerCase() === email
+  // ── Check faculty tab first ───────────────────────────────────────────────
+  const myRows = allFaculty.filter(
+    (f) => f.faculty_email.trim().toLowerCase() === email
   );
 
-  if (!userRecord) {
-    return NextResponse.json(
-      { error: `No access record found for "${email}". Check your user_access sheet.` },
-      { status: 403 }
-    );
+  if (myRows.length > 0) {
+    const batches = Array.from(new Set(myRows.map((r) => r.batch.trim()).filter(Boolean)));
+    const name    = myRows[0].faculty_name || email.split("@")[0];
+
+    const result = filterPdfsForFaculty(allPdfs, { role: "faculty", name, email, batches });
+
+    await logEvent({
+      email,
+      role: "faculty",
+      scope_value: batches.join(","),
+      event_type: "portal_open",
+    });
+
+    return NextResponse.json({
+      role: result.role,
+      scopeValue: result.scopeValue,
+      batches: result.batches,
+      pdfs: result.pdfs,
+      isAdmin: isAdmin(email),
+      user: { name, email, image: null },
+    });
   }
 
-  const result = filterPdfs(allPdfs, userRecord);
+  // ── Check heads tab ───────────────────────────────────────────────────────
+  const headRecord = allHeads.find(
+    (h) => h.email.trim().toLowerCase() === email
+  );
 
-  await logEvent({
-    email,
-    role: userRecord.role,
-    scope_value: userRecord.scope_value,
-    event_type: "portal_open",
-  });
-
-  const adminEmails = (process.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim().toLowerCase());
-  const isAdmin = adminEmails.includes(email);
-
-  return NextResponse.json({
-    role: result.role,
-    scopeValue: result.scopeValue,
-    pdfs: result.pdfs,
-    isAdmin,
-    user: {
-      name: email.split("@")[0],
+  if (headRecord) {
+    const name   = email.split("@")[0];
+    const result = filterPdfsForHead(allPdfs, {
+      role: headRecord.role,
+      name,
       email,
-      image: null,
-    },
-  });
+      scopeValue: headRecord.scope_value,
+    });
+
+    await logEvent({
+      email,
+      role: headRecord.role,
+      scope_value: headRecord.scope_value,
+      event_type: "portal_open",
+    });
+
+    return NextResponse.json({
+      role: result.role,
+      scopeValue: result.scopeValue,
+      batches: result.batches,
+      pdfs: result.pdfs,
+      isAdmin: isAdmin(email),
+      user: { name, email, image: null },
+    });
+  }
+
+  // ── No access record found ────────────────────────────────────────────────
+  return NextResponse.json(
+    { error: `No access record found for "${email}". Contact your admin.` },
+    { status: 403 }
+  );
 }

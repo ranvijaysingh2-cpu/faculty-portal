@@ -4,11 +4,23 @@ import { useEffect, useState, useMemo } from "react";
 import { signOut } from "next-auth/react";
 import type { PdfRecord } from "@/lib/csv";
 
+function useIsMobile() {
+  const [mobile, setMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setMobile(window.innerWidth < 480);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return mobile;
+}
+
 type Role = "faculty" | "center_head" | "region_head";
 
 interface ApiResponse {
   role: Role;
   scopeValue: string;
+  batches: string[];        // all batches for this user
   pdfs: PdfRecord[];
   isAdmin: boolean;
   user: { name: string; email: string; image?: string };
@@ -38,6 +50,7 @@ function roleLabel(role: Role) {
 // ── main component ─────────────────────────────────────────────────────────
 
 export default function PdfBrowser() {
+  const isMobile = useIsMobile();
   const [data, setData] = useState<ApiResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -58,7 +71,8 @@ export default function PdfBrowser() {
         setFetchedAt(new Date());
 
         // pre-select single scope values
-        if (json.role === "faculty") setSelBatch(json.scopeValue);
+        // Auto-select scope for single-value roles
+        if (json.role === "faculty" && json.batches?.length === 1) setSelBatch(json.batches[0]);
         if (json.role === "center_head") setSelCenter(json.scopeValue);
         if (json.role === "region_head") setSelRegion(json.scopeValue);
       })
@@ -179,17 +193,17 @@ export default function PdfBrowser() {
             <div style={hdr.logoBox}>
               <span style={hdr.logoText}>PW</span>
             </div>
-            <span style={hdr.brand}>Physics Wallah</span>
+            {!isMobile && <span style={hdr.brand}>Physics Wallah</span>}
           </div>
           <div style={hdr.userRow}>
             {data.isAdmin && (
               <a href="/admin" style={hdr.adminLink}>
-                Admin →
+                {isMobile ? "Admin" : "Admin →"}
               </a>
             )}
             <div style={{ textAlign: "right" }}>
               <div style={hdr.userName}>{data.user.name}</div>
-              <div style={hdr.userEmail}>{data.user.email}</div>
+              {!isMobile && <div style={hdr.userEmail}>{data.user.email}</div>}
             </div>
             {data.user.image ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -208,7 +222,9 @@ export default function PdfBrowser() {
           <div>
             <div style={main.welcomeRole}>{roleLabel(role)}</div>
             <div style={main.welcomeScope}>
-              Scope: <strong>{data.scopeValue}</strong>
+              {data.role === "faculty" && data.batches.length > 1
+                ? <><strong>{data.batches.length} batches</strong> assigned</>
+                : <>Scope: <strong>{data.scopeValue}</strong></>}
               &nbsp;·&nbsp;
               <span style={{ color: "#888" }}>
                 {data.pdfs.length} PDF{data.pdfs.length !== 1 ? "s" : ""} available

@@ -57,6 +57,8 @@ export default function AdminDashboard() {
   const [reportModal, setReportModal] = useState(false);
   const [sending, setSending] = useState(false);
   const [sentOk, setSentOk] = useState(false);
+  const [building, setBuilding] = useState(false);
+  const [builtOk, setBuiltOk] = useState(false);
   const isMobile = useIsMobile();
   const REFRESH_MS = 10 * 60 * 1000;
 
@@ -92,9 +94,10 @@ export default function AdminDashboard() {
   function exportCSV() {
     if (!stats) return;
     const rows = [
-      ["Email", "Role", "Scope", "Last Seen"],
-      ...stats.users.inactive.map((u) => [
-        u.email, u.role, u.scope,
+      ["Name", "Email", "Batch", "Center", "Region", "Last Seen"],
+      ...stats.users.inactive.map((u: any) => [
+        u.name || u.email.split("@")[0], u.email, u.batch || u.scope || "",
+        u.center || "", u.region || "",
         u.lastSeen ? new Date(u.lastSeen).toLocaleDateString("en-IN") : "Never",
       ]),
     ];
@@ -109,11 +112,29 @@ export default function AdminDashboard() {
   async function sendReport() {
     setSending(true);
     try {
-      const res = await fetch("/api/admin/send-report", { method: "POST" });
+      const res = await fetch("/api/admin/send-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "send_reports" }),
+      });
       const d = await res.json();
-      if (d.ok) { setSentOk(true); setTimeout(() => setSentOk(false), 4000); }
+      if (d.ok) { setSentOk(true); setTimeout(() => setSentOk(false), 5000); }
       else alert("Error: " + d.error);
     } finally { setSending(false); }
+  }
+
+  async function buildMasterMap() {
+    setBuilding(true);
+    try {
+      const res = await fetch("/api/admin/send-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "build_master_map" }),
+      });
+      const d = await res.json();
+      if (d.ok) { setBuiltOk(true); setTimeout(() => { setBuiltOk(false); fetchStats(); }, 3000); }
+      else alert("Error: " + d.error);
+    } finally { setBuilding(false); }
   }
 
   if (loading) return <Spinner />;
@@ -134,6 +155,9 @@ export default function AdminDashboard() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" as const, justifyContent: "flex-end" }}>
           {revalidatedAt && !isMobile && <span style={{ color: "#888", fontSize: 11 }}>Refreshed {revalidatedAt}</span>}
+          <Btn onClick={buildMasterMap} disabled={building}>
+            {building ? "⟳" : builtOk ? "✅" : "🗺️"}{!isMobile && (building ? " Building…" : builtOk ? " Built!" : " Build Map")}
+          </Btn>
           <Btn onClick={handleRevalidate} disabled={revalidating} yellow>
             {revalidating ? "⟳" : "⚡"}{!isMobile && (revalidating ? " Refreshing…" : " Refresh Now")}
           </Btn>
@@ -188,7 +212,7 @@ export default function AdminDashboard() {
                 <BarChart data={activity.byCenter} layout="vertical" margin={{ top: 5, right: 16, left: 4, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0efe8" />
                   <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
-                  <YAxis type="category" dataKey="center" tick={{ fontSize: 10 }} width={110} />
+                  <YAxis type="category" dataKey="center" tick={{ fontSize: 10 }} width={isMobile ? 90 : 140} tickFormatter={(v) => v.length > (isMobile ? 13 : 22) ? v.slice(0, isMobile ? 11 : 20) + "…" : v} />
                   <Tooltip />
                   <Bar dataKey="opens" fill="#4ECDC4" radius={[0, 4, 4, 0]} name="Opens" />
                 </BarChart>
@@ -205,7 +229,7 @@ export default function AdminDashboard() {
                 <BarChart data={activity.byBatch} layout="vertical" margin={{ top: 5, right: 16, left: 4, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0efe8" />
                   <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
-                  <YAxis type="category" dataKey="batch" tick={{ fontSize: 10 }} width={120} />
+                  <YAxis type="category" dataKey="batch" tick={{ fontSize: 10 }} width={isMobile ? 90 : 130} tickFormatter={(v) => v.length > (isMobile ? 13 : 20) ? v.slice(0, isMobile ? 11 : 18) + "…" : v} />
                   <Tooltip />
                   <Bar dataKey="opens" fill="#FF6B35" radius={[0, 4, 4, 0]} name="Opens" />
                 </BarChart>
@@ -234,10 +258,10 @@ export default function AdminDashboard() {
               <span style={{ background: "#FEE2E2", color: "#EF4444", fontSize: 11, padding: "2px 8px", borderRadius: 20, marginLeft: 8 }}>{users.inactive.length}</span>
             </h2>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
-              <Btn onClick={() => setReportModal(true)}>📋 Preview Report</Btn>
-              <Btn onClick={sendReport} disabled={sending}>{sending ? "Sending…" : sentOk ? "✅ Sent!" : "📧 Send to Boss"}</Btn>
-              <Btn onClick={copyEmails}>{copied ? "✅ Copied!" : "📋 Copy Emails"}</Btn>
-              <Btn onClick={exportCSV}>⬇️ Export CSV</Btn>
+              <Btn onClick={() => setReportModal(true)}>{isMobile ? "📋" : "📋 Preview Report"}</Btn>
+              <Btn onClick={sendReport} disabled={sending}>{sending ? "…" : sentOk ? "✅" : isMobile ? "📧" : "📧 Send All Reports"}</Btn>
+              <Btn onClick={copyEmails}>{copied ? "✅" : isMobile ? "📋 Copy" : "📋 Copy Emails"}</Btn>
+              <Btn onClick={exportCSV}>{isMobile ? "⬇️ CSV" : "⬇️ Export CSV"}</Btn>
             </div>
           </div>
 
@@ -246,13 +270,15 @@ export default function AdminDashboard() {
           ) : (
             <div style={{ overflowX: "auto" }}>
               <table style={T.table}>
-                <thead><tr>{["Email", "Role", "Scope", "Last Seen"].map((h) => <th key={h} style={T.th}>{h}</th>)}</tr></thead>
+                <thead><tr>{["Name", "Email", "Batch", "Center", "Region", "Last Seen"].map((h) => <th key={h} style={T.th}>{h}</th>)}</tr></thead>
                 <tbody>
-                  {users.inactive.map((u, i) => (
+                  {users.inactive.map((u: any, i: number) => (
                     <tr key={i} style={{ background: i % 2 === 0 ? "#fff" : "#fafaf8" }}>
-                      <td style={T.td}>{u.email}</td>
-                      <td style={T.td}><RoleBadge role={u.role} /></td>
-                      <td style={T.td}>{u.scope}</td>
+                      <td style={T.td}>{u.name || u.email.split("@")[0]}</td>
+                      <td style={{ ...T.td, fontSize: 12, color: "#666" }}>{u.email}</td>
+                      <td style={T.td}>{u.batch || u.scope || "—"}</td>
+                      <td style={T.td}>{u.center || "—"}</td>
+                      <td style={T.td}>{u.region || "—"}</td>
                       <td style={{ ...T.td, color: u.lastSeen ? "#555" : "#EF4444" }}>
                         {u.lastSeen ? new Date(u.lastSeen).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "Never opened"}
                       </td>
