@@ -32,7 +32,6 @@ interface Stats {
 }
 
 const Y = "#FFC700";
-const DARK = "#1A1A1A";
 
 function useIsMobile() {
   const [mobile, setMobile] = useState(false);
@@ -44,6 +43,25 @@ function useIsMobile() {
   }, []);
   return mobile;
 }
+
+// ── Custom chart tooltip ──────────────────────────────────────────────────────
+
+function DarkTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{ background: "rgba(20,20,20,0.95)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "8px 14px", fontSize: 12 }}>
+      {label && <div style={{ color: "rgba(255,255,255,0.4)", marginBottom: 4 }}>{label}</div>}
+      {payload.map((p: any, i: number) => (
+        <div key={i} style={{ color: "#fff", fontWeight: 600 }}>
+          <span style={{ color: p.color }}>{p.name}: </span>{p.value}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const tickStyle = { fill: "rgba(255,255,255,0.35)", fontSize: 10 };
+const gridStroke = "rgba(255,255,255,0.07)";
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
@@ -137,54 +155,60 @@ export default function AdminDashboard() {
     } finally { setBuilding(false); }
   }
 
-  if (loading) return <Spinner />;
-  if (error) return <div style={{ padding: 40, color: "red" }}>{error}</div>;
+  if (loading) return <AdminSpinner />;
+  if (error) return <AdminError message={error} />;
   if (!stats) return null;
 
   const { users, activity } = stats;
   const inactivePct = users.total > 0 ? Math.round((users.inactive.length / users.total) * 100) : 0;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#F5F4EE", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>
+    <div style={pg.root}>
 
       {/* ── Header ── */}
-      <header style={{ background: DARK, padding: isMobile ? "0 16px" : "0 32px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100, gap: 12 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-          <div style={{ width: 30, height: 30, borderRadius: 7, background: Y, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 11, flexShrink: 0 }}>PW</div>
-          {!isMobile && <span style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Admin Dashboard</span>}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" as const, justifyContent: "flex-end" }}>
-          {revalidatedAt && !isMobile && <span style={{ color: "#888", fontSize: 11 }}>Refreshed {revalidatedAt}</span>}
-          <Btn onClick={buildMasterMap} disabled={building}>
-            {building ? "⟳" : builtOk ? "✅" : "🗺️"}{!isMobile && (building ? " Building…" : builtOk ? " Built!" : " Build Map")}
-          </Btn>
-          <Btn onClick={handleRevalidate} disabled={revalidating} yellow>
-            {revalidating ? "⟳" : "⚡"}{!isMobile && (revalidating ? " Refreshing…" : " Refresh Now")}
-          </Btn>
-          <a href="/" style={{ color: "#aaa", fontSize: 12, textDecoration: "none", padding: "6px 10px" }}>← Portal</a>
+      <header style={nav.bar}>
+        <div style={nav.inner}>
+          <div style={nav.left}>
+            <div style={nav.logoBox}><span style={nav.logoText}>PW</span></div>
+            {!isMobile && <span style={nav.brand}>Admin Dashboard</span>}
+          </div>
+          <div style={nav.right}>
+            {revalidatedAt && !isMobile && (
+              <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>Refreshed {revalidatedAt}</span>
+            )}
+            <DarkBtn onClick={buildMasterMap} disabled={building}>
+              {building ? "⟳" : builtOk ? "✅" : "🗺️"}
+              {!isMobile && (building ? " Building…" : builtOk ? " Built!" : " Build Map")}
+            </DarkBtn>
+            <DarkBtn onClick={handleRevalidate} disabled={revalidating} yellow>
+              {revalidating ? "⟳" : "⚡"}
+              {!isMobile && (revalidating ? " Refreshing…" : " Refresh Now")}
+            </DarkBtn>
+            <a href="/" style={nav.portalLink}>← Portal</a>
+          </div>
         </div>
       </header>
 
-      <main style={{ maxWidth: 1300, margin: "0 auto", padding: isMobile ? "16px 12px 60px" : "28px 24px 80px" }}>
+      <main style={pg.main(isMobile)}>
 
-        {/* ── KPI Cards ── */}
+        {/* ── KPI Grid ── */}
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(3, 1fr)", gap: 12, marginBottom: 24 }}>
-          <KpiCard label="Total Users" value={users.total} icon="👥" color="#3B82F6" />
-          <KpiCard label="Active This Week" value={users.activeThisWeek} sub={`${Math.round((users.activeThisWeek / (users.total || 1)) * 100)}%`} icon="✅" color="#10B981" />
-          <KpiCard label="Inactive This Week" value={users.inactive.length} sub={`${inactivePct}% of total`} icon="⚠️" color="#EF4444" />
-          <KpiCard label="Active This Month" value={users.activeThisMonth} icon="📅" color="#8B5CF6" />
-          <KpiCard label="Portal Opens" value={activity.totalPortalOpens} sub="all time" icon="🚪" color="#6366F1" />
-          <KpiCard label="PDF Opens" value={activity.totalPdfOpens} sub="all time" icon="📄" color="#F59E0B" />
+          <KpiCard label="Total Users" value={users.total} icon="👥" accent="#3B82F6" />
+          <KpiCard label="Active This Week" value={users.activeThisWeek} sub={`${Math.round((users.activeThisWeek / (users.total || 1)) * 100)}%`} icon="✅" accent="#10B981" />
+          <KpiCard label="Inactive This Week" value={users.inactive.length} sub={`${inactivePct}% of total`} icon="⚠️" accent="#EF4444" />
+          <KpiCard label="Active This Month" value={users.activeThisMonth} icon="📅" accent="#8B5CF6" />
+          <KpiCard label="Portal Opens" value={activity.totalPortalOpens} sub="all time" icon="🚪" accent="#6366F1" />
+          <KpiCard label="PDF Opens" value={activity.totalPdfOpens} sub="all time" icon="📄" accent={Y} />
         </div>
 
-        {/* ── Daily Active Users ── */}
+        {/* ── Daily Active ── */}
         <ChartCard title="Daily Active Users — Last 30 Days">
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={activity.dailyActive} margin={{ top: 5, right: 16, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0efe8" />
-              <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={(v) => v.slice(5)} interval={isMobile ? 6 : 3} />
-              <YAxis tick={{ fontSize: 10 }} allowDecimals={false} width={28} />
-              <Tooltip labelFormatter={(v) => `Date: ${v}`} />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+              <XAxis dataKey="date" tick={tickStyle} tickFormatter={(v) => v.slice(5)} interval={isMobile ? 6 : 3} axisLine={false} tickLine={false} />
+              <YAxis tick={tickStyle} allowDecimals={false} width={28} axisLine={false} tickLine={false} />
+              <Tooltip content={<DarkTooltip />} />
               <Line type="monotone" dataKey="count" stroke={Y} strokeWidth={2.5} dot={false} name="Active Users" />
             </LineChart>
           </ResponsiveContainer>
@@ -193,13 +217,13 @@ export default function AdminDashboard() {
         {/* ── Region + Center ── */}
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 16 }}>
           <ChartCard title="PDF Opens by Region">
-            {activity.byRegion.length === 0 ? <Empty /> : (
+            {activity.byRegion.length === 0 ? <ChartEmpty /> : (
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={activity.byRegion} margin={{ top: 5, right: 16, left: 0, bottom: 30 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0efe8" />
-                  <XAxis dataKey="region" tick={{ fontSize: 10 }} angle={-20} textAnchor="end" />
-                  <YAxis tick={{ fontSize: 10 }} allowDecimals={false} width={28} />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                  <XAxis dataKey="region" tick={tickStyle} angle={-20} textAnchor="end" axisLine={false} tickLine={false} />
+                  <YAxis tick={tickStyle} allowDecimals={false} width={28} axisLine={false} tickLine={false} />
+                  <Tooltip content={<DarkTooltip />} />
                   <Bar dataKey="opens" fill={Y} radius={[4, 4, 0, 0]} name="Opens" />
                 </BarChart>
               </ResponsiveContainer>
@@ -207,13 +231,15 @@ export default function AdminDashboard() {
           </ChartCard>
 
           <ChartCard title="PDF Opens by Center (Top 10)">
-            {activity.byCenter.length === 0 ? <Empty /> : (
+            {activity.byCenter.length === 0 ? <ChartEmpty /> : (
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={activity.byCenter} layout="vertical" margin={{ top: 5, right: 16, left: 4, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0efe8" />
-                  <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
-                  <YAxis type="category" dataKey="center" tick={{ fontSize: 10 }} width={isMobile ? 90 : 140} tickFormatter={(v) => v.length > (isMobile ? 13 : 22) ? v.slice(0, isMobile ? 11 : 20) + "…" : v} />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                  <XAxis type="number" tick={tickStyle} allowDecimals={false} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="center" tick={tickStyle} width={isMobile ? 90 : 140}
+                    tickFormatter={(v) => v.length > (isMobile ? 13 : 22) ? v.slice(0, isMobile ? 11 : 20) + "…" : v}
+                    axisLine={false} tickLine={false} />
+                  <Tooltip content={<DarkTooltip />} />
                   <Bar dataKey="opens" fill="#4ECDC4" radius={[0, 4, 4, 0]} name="Opens" />
                 </BarChart>
               </ResponsiveContainer>
@@ -224,13 +250,15 @@ export default function AdminDashboard() {
         {/* ── Batch + Hour ── */}
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 16 }}>
           <ChartCard title="PDF Opens by Batch (Top 10)">
-            {activity.byBatch.length === 0 ? <Empty /> : (
+            {activity.byBatch.length === 0 ? <ChartEmpty /> : (
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={activity.byBatch} layout="vertical" margin={{ top: 5, right: 16, left: 4, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0efe8" />
-                  <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
-                  <YAxis type="category" dataKey="batch" tick={{ fontSize: 10 }} width={isMobile ? 90 : 130} tickFormatter={(v) => v.length > (isMobile ? 13 : 20) ? v.slice(0, isMobile ? 11 : 18) + "…" : v} />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                  <XAxis type="number" tick={tickStyle} allowDecimals={false} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="batch" tick={tickStyle} width={isMobile ? 90 : 130}
+                    tickFormatter={(v) => v.length > (isMobile ? 13 : 20) ? v.slice(0, isMobile ? 11 : 18) + "…" : v}
+                    axisLine={false} tickLine={false} />
+                  <Tooltip content={<DarkTooltip />} />
                   <Bar dataKey="opens" fill="#FF6B35" radius={[0, 4, 4, 0]} name="Opens" />
                 </BarChart>
               </ResponsiveContainer>
@@ -240,10 +268,10 @@ export default function AdminDashboard() {
           <ChartCard title="Activity by Hour of Day">
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={activity.byHour} margin={{ top: 5, right: 16, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0efe8" />
-                <XAxis dataKey="hour" tick={{ fontSize: 10 }} interval={isMobile ? 5 : 2} />
-                <YAxis tick={{ fontSize: 10 }} allowDecimals={false} width={28} />
-                <Tooltip />
+                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                <XAxis dataKey="hour" tick={tickStyle} interval={isMobile ? 5 : 2} axisLine={false} tickLine={false} />
+                <YAxis tick={tickStyle} allowDecimals={false} width={28} axisLine={false} tickLine={false} />
+                <Tooltip content={<DarkTooltip />} />
                 <Bar dataKey="count" fill="#8B5CF6" radius={[4, 4, 0, 0]} name="Events" />
               </BarChart>
             </ResponsiveContainer>
@@ -251,35 +279,44 @@ export default function AdminDashboard() {
         </div>
 
         {/* ── Inactive Users Table ── */}
-        <div style={T.box}>
-          <div style={{ display: "flex", flexWrap: "wrap" as const, alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14 }}>
-            <h2 style={T.heading}>
-              ⚠️ Inactive This Week
-              <span style={{ background: "#FEE2E2", color: "#EF4444", fontSize: 11, padding: "2px 8px", borderRadius: 20, marginLeft: 8 }}>{users.inactive.length}</span>
-            </h2>
+        <div style={card.box}>
+          <div style={{ display: "flex", flexWrap: "wrap" as const, alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 18 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <h2 style={card.title}>Inactive This Week</h2>
+              <span style={badge.red}>{users.inactive.length}</span>
+            </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
-              <Btn onClick={() => setReportModal(true)}>{isMobile ? "📋" : "📋 Preview Report"}</Btn>
-              <Btn onClick={sendReport} disabled={sending}>{sending ? "…" : sentOk ? "✅" : isMobile ? "📧" : "📧 Send All Reports"}</Btn>
-              <Btn onClick={copyEmails}>{copied ? "✅" : isMobile ? "📋 Copy" : "📋 Copy Emails"}</Btn>
-              <Btn onClick={exportCSV}>{isMobile ? "⬇️ CSV" : "⬇️ Export CSV"}</Btn>
+              <DarkBtn onClick={() => setReportModal(true)}>{isMobile ? "📋" : "📋 Preview"}</DarkBtn>
+              <DarkBtn onClick={sendReport} disabled={sending}>{sending ? "…" : sentOk ? "✅" : isMobile ? "📧" : "📧 Send Reports"}</DarkBtn>
+              <DarkBtn onClick={copyEmails}>{copied ? "✅" : isMobile ? "Copy" : "Copy Emails"}</DarkBtn>
+              <DarkBtn onClick={exportCSV}>{isMobile ? "CSV" : "Export CSV"}</DarkBtn>
             </div>
           </div>
 
           {users.inactive.length === 0 ? (
-            <p style={{ color: "#10B981", textAlign: "center", padding: 24, fontWeight: 600 }}>🎉 All users active this week!</p>
+            <div style={{ textAlign: "center", padding: "32px 0" }}>
+              <span style={{ fontSize: 32 }}>🎉</span>
+              <p style={{ marginTop: 10, color: "#10B981", fontWeight: 600, fontSize: 14 }}>All users active this week!</p>
+            </div>
           ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={T.table}>
-                <thead><tr>{["Name", "Email", "Batch", "Center", "Region", "Last Seen"].map((h) => <th key={h} style={T.th}>{h}</th>)}</tr></thead>
+            <div style={{ overflowX: "auto", borderRadius: 10, border: "1px solid rgba(255,255,255,0.07)" }}>
+              <table style={tbl.table}>
+                <thead>
+                  <tr style={{ background: "rgba(255,255,255,0.04)" }}>
+                    {["Name", "Email", "Batch", "Center", "Region", "Last Seen"].map((h) => (
+                      <th key={h} style={tbl.th}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
                 <tbody>
                   {users.inactive.map((u: any, i: number) => (
-                    <tr key={i} style={{ background: i % 2 === 0 ? "#fff" : "#fafaf8" }}>
-                      <td style={T.td}>{u.name || u.email.split("@")[0]}</td>
-                      <td style={{ ...T.td, fontSize: 12, color: "#666" }}>{u.email}</td>
-                      <td style={T.td}>{u.batch || u.scope || "—"}</td>
-                      <td style={T.td}>{u.center || "—"}</td>
-                      <td style={T.td}>{u.region || "—"}</td>
-                      <td style={{ ...T.td, color: u.lastSeen ? "#555" : "#EF4444" }}>
+                    <tr key={i} style={{ background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)", transition: "background 0.15s" }}>
+                      <td style={tbl.td}>{u.name || u.email.split("@")[0]}</td>
+                      <td style={{ ...tbl.td, color: "rgba(255,255,255,0.45)", fontSize: 12 }}>{u.email}</td>
+                      <td style={tbl.td}>{u.batch || u.scope || "—"}</td>
+                      <td style={tbl.td}>{u.center || "—"}</td>
+                      <td style={tbl.td}>{u.region || "—"}</td>
+                      <td style={{ ...tbl.td, color: u.lastSeen ? "rgba(255,255,255,0.5)" : "#EF4444", fontWeight: u.lastSeen ? 400 : 600 }}>
                         {u.lastSeen ? new Date(u.lastSeen).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "Never opened"}
                       </td>
                     </tr>
@@ -291,26 +328,34 @@ export default function AdminDashboard() {
         </div>
 
         {/* ── Recent Activity ── */}
-        <div style={T.box}>
-          <h2 style={{ ...T.heading, marginBottom: 14 }}>🕒 Recent Activity</h2>
-          <div style={{ overflowX: "auto" }}>
-            <table style={T.table}>
-              <thead><tr>{["Time", "Email", "Event", "Details"].map((h) => <th key={h} style={T.th}>{h}</th>)}</tr></thead>
+        <div style={card.box}>
+          <h2 style={{ ...card.title, marginBottom: 16 }}>Recent Activity</h2>
+          <div style={{ overflowX: "auto", borderRadius: 10, border: "1px solid rgba(255,255,255,0.07)" }}>
+            <table style={tbl.table}>
+              <thead>
+                <tr style={{ background: "rgba(255,255,255,0.04)" }}>
+                  {["Time", "Email", "Event", "Details"].map((h) => (
+                    <th key={h} style={tbl.th}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
               <tbody>
                 {activity.recentEvents.length === 0 ? (
-                  <tr><td colSpan={4} style={{ ...T.td, textAlign: "center", color: "#aaa" }}>No activity yet</td></tr>
+                  <tr><td colSpan={4} style={{ ...tbl.td, textAlign: "center", color: "rgba(255,255,255,0.2)", padding: "32px 0" }}>No activity yet</td></tr>
                 ) : activity.recentEvents.map((e, i) => (
-                  <tr key={i} style={{ background: i % 2 === 0 ? "#fff" : "#fafaf8" }}>
-                    <td style={{ ...T.td, color: "#888", fontSize: 11, whiteSpace: "nowrap" as const }}>
+                  <tr key={i} style={{ background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)" }}>
+                    <td style={{ ...tbl.td, color: "rgba(255,255,255,0.35)", fontSize: 11, whiteSpace: "nowrap" as const }}>
                       {new Date(e.timestamp).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                     </td>
-                    <td style={{ ...T.td, fontSize: 12 }}>{e.email}</td>
-                    <td style={T.td}>
-                      <span style={{ background: e.event_type === "pdf_open" ? "#FFF9E0" : "#EFF6FF", color: e.event_type === "pdf_open" ? "#b38f00" : "#3B82F6", fontSize: 11, padding: "2px 8px", borderRadius: 20, fontWeight: 600, whiteSpace: "nowrap" as const }}>
-                        {e.event_type === "pdf_open" ? "📄 PDF" : "🚪 Login"}
-                      </span>
+                    <td style={{ ...tbl.td, fontSize: 12 }}>{e.email}</td>
+                    <td style={tbl.td}>
+                      {e.event_type === "pdf_open" ? (
+                        <span style={badge.yellow}>📄 PDF</span>
+                      ) : (
+                        <span style={badge.blue}>🚪 Login</span>
+                      )}
                     </td>
-                    <td style={{ ...T.td, fontSize: 12, color: "#555" }}>
+                    <td style={{ ...tbl.td, fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
                       {e.pdf_name ? `${e.pdf_name}${e.batch ? ` · ${e.batch}` : ""}` : e.region ?? "—"}
                     </td>
                   </tr>
@@ -320,25 +365,29 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <p style={{ textAlign: "center", fontSize: 11, color: "#bbb", marginTop: 8 }}>
+        <p style={{ textAlign: "center", fontSize: 11, color: "rgba(255,255,255,0.18)", marginTop: 8 }}>
           Auto-refreshes every 10 min · Last loaded: {new Date(stats.lastSync).toLocaleTimeString()}
         </p>
       </main>
 
-      {/* ── Weekly Report Modal ── */}
-      {reportModal && <ReportModal stats={stats} onClose={() => setReportModal(false)} onSend={sendReport} sending={sending} sentOk={sentOk} />}
+      {/* ── Report Modal ── */}
+      {reportModal && (
+        <ReportModal
+          stats={stats}
+          onClose={() => setReportModal(false)}
+          onSend={sendReport}
+          sending={sending}
+          sentOk={sentOk}
+        />
+      )}
     </div>
   );
 }
 
-// ── Weekly Report Modal ───────────────────────────────────────────────────────
+// ── Report Modal ──────────────────────────────────────────────────────────────
 
 function ReportModal({ stats, onClose, onSend, sending, sentOk }: {
-  stats: Stats;
-  onClose: () => void;
-  onSend: () => void;
-  sending: boolean;
-  sentOk: boolean;
+  stats: Stats; onClose: () => void; onSend: () => void; sending: boolean; sentOk: boolean;
 }) {
   const { users, activity } = stats;
   const week = (() => {
@@ -379,89 +428,165 @@ function ReportModal({ stats, onClose, onSend, sending, sentOk }: {
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-      <div style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 600, maxHeight: "85vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <div style={{ padding: "18px 20px", borderBottom: "1px solid #eee", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700, color: DARK }}>📋 Weekly Report Preview</h2>
-          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#888", lineHeight: 1 }}>×</button>
+    <div style={modal.overlay} onClick={onClose}>
+      <div style={modal.box} onClick={(e) => e.stopPropagation()}>
+        <div style={modal.header}>
+          <h2 style={modal.title}>📋 Weekly Report Preview</h2>
+          <button onClick={onClose} style={modal.closeBtn}>×</button>
         </div>
-        <pre style={{ flex: 1, overflowY: "auto", padding: "16px 20px", fontSize: 12, lineHeight: 1.7, color: "#333", fontFamily: "monospace", margin: 0, whiteSpace: "pre-wrap" as const }}>
-          {reportText}
-        </pre>
-        <div style={{ padding: "14px 20px", borderTop: "1px solid #eee", display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <Btn onClick={copyReport}>{copied ? "✅ Copied!" : "📋 Copy"}</Btn>
-          <Btn onClick={onSend} yellow disabled={sending}>{sending ? "Sending…" : sentOk ? "✅ Sent!" : "📧 Send to Boss"}</Btn>
+        <pre style={modal.body}>{reportText}</pre>
+        <div style={modal.footer}>
+          <DarkBtn onClick={copyReport}>{copied ? "✅ Copied!" : "📋 Copy"}</DarkBtn>
+          <DarkBtn onClick={onSend} yellow disabled={sending}>{sending ? "Sending…" : sentOk ? "✅ Sent!" : "📧 Send All Reports"}</DarkBtn>
         </div>
       </div>
     </div>
   );
 }
 
-// ── Small Components ──────────────────────────────────────────────────────────
+// ── Sub-components ────────────────────────────────────────────────────────────
 
-function KpiCard({ label, value, sub, icon, color }: { label: string; value: string | number; sub?: string; icon: string; color: string }) {
+function KpiCard({ label, value, sub, icon, accent }: { label: string; value: string | number; sub?: string; icon: string; accent: string }) {
   return (
-    <div style={{ background: "#fff", borderRadius: 12, padding: "16px 18px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderTop: `3px solid ${color}` }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-        <span style={{ fontSize: 11, fontWeight: 600, color: "#888", textTransform: "uppercase" as const, letterSpacing: 0.5 }}>{label}</span>
-        <span style={{ fontSize: 18 }}>{icon}</span>
+    <div style={{ ...card.box, borderTop: `2px solid ${accent}`, padding: "16px 18px", marginBottom: 0 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)", textTransform: "uppercase" as const, letterSpacing: 0.6 }}>{label}</span>
+        <span style={{ fontSize: 20 }}>{icon}</span>
       </div>
-      <div style={{ fontSize: 26, fontWeight: 800, color: DARK, lineHeight: 1 }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: "#aaa", marginTop: 5 }}>{sub}</div>}
+      <div style={{ fontSize: 28, fontWeight: 800, color: "#fff", lineHeight: 1, letterSpacing: -1 }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 6 }}>{sub}</div>}
     </div>
   );
 }
 
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: "#fff", borderRadius: 12, padding: "16px 18px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", marginBottom: 16 }}>
-      <h2 style={{ fontSize: 13, fontWeight: 700, color: DARK, marginBottom: 14 }}>{title}</h2>
+    <div style={{ ...card.box, marginBottom: 0 }}>
+      <h2 style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.8)", marginBottom: 16, letterSpacing: -0.2 }}>{title}</h2>
       {children}
     </div>
   );
 }
 
-function Btn({ children, onClick, disabled, yellow }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean; yellow?: boolean }) {
+function DarkBtn({ children, onClick, disabled, yellow }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean; yellow?: boolean }) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      style={{ background: yellow ? Y : "#f5f4ee", color: yellow ? DARK : "#333", border: "1.5px solid " + (yellow ? Y : "#e0dfd8"), borderRadius: 8, padding: "7px 14px", fontWeight: 600, fontSize: 12, cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.6 : 1, whiteSpace: "nowrap" as const }}
+      style={{
+        background: yellow ? Y : "rgba(255,255,255,0.07)",
+        color: yellow ? "#1A1A1A" : "rgba(255,255,255,0.7)",
+        border: "1px solid " + (yellow ? Y : "rgba(255,255,255,0.12)"),
+        borderRadius: 8,
+        padding: "7px 14px",
+        fontWeight: 600,
+        fontSize: 12,
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.5 : 1,
+        whiteSpace: "nowrap" as const,
+        transition: "all 0.15s",
+      }}
     >
       {children}
     </button>
   );
 }
 
-function RoleBadge({ role }: { role: string }) {
-  const m: Record<string, [string, string, string]> = {
-    faculty: ["Faculty", "#EFF6FF", "#3B82F6"],
-    center_head: ["Center Head", "#F0FDF4", "#10B981"],
-    region_head: ["Region Head", "#FFF9E0", "#b38f00"],
-  };
-  const [label, bg, color] = m[role] ?? [role, "#f0f0f0", "#555"];
-  return <span style={{ background: bg, color, fontSize: 11, padding: "2px 8px", borderRadius: 20, fontWeight: 600 }}>{label}</span>;
+function ChartEmpty() {
+  return <div style={{ textAlign: "center", padding: "32px 0", color: "rgba(255,255,255,0.2)", fontSize: 13 }}>No data yet</div>;
 }
 
-function Empty() {
-  return <div style={{ textAlign: "center", padding: "32px 0", color: "#ccc", fontSize: 13 }}>No data yet</div>;
-}
-
-function Spinner() {
+function AdminSpinner() {
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#F5F4EE" }}>
+    <div style={{ minHeight: "100vh", background: "#0A0A0A", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ textAlign: "center" }}>
-        <div style={{ width: 36, height: 36, border: "3px solid #eee", borderTopColor: Y, borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
-        <p style={{ color: "#888", fontSize: 14 }}>Loading dashboard…</p>
+        <div style={{ width: 36, height: 36, border: "2.5px solid rgba(255,255,255,0.08)", borderTopColor: Y, borderRadius: "50%", animation: "spin 0.75s linear infinite", margin: "0 auto 16px" }} />
+        <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 14 }}>Loading dashboard…</p>
       </div>
     </div>
   );
 }
 
-const T = {
-  box: { background: "#fff", borderRadius: 12, padding: "16px 18px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", marginBottom: 16 } as React.CSSProperties,
-  heading: { fontSize: 14, fontWeight: 700, color: DARK } as React.CSSProperties,
-  table: { width: "100%", borderCollapse: "collapse" as const, fontSize: 13 },
-  th: { textAlign: "left" as const, padding: "8px 10px", borderBottom: "2px solid #f0efe8", fontSize: 11, fontWeight: 700, color: "#888", textTransform: "uppercase" as const, letterSpacing: 0.5, whiteSpace: "nowrap" as const },
-  td: { padding: "9px 10px", borderBottom: "1px solid #f5f4ee", color: DARK, verticalAlign: "middle" as const } as React.CSSProperties,
+function AdminError({ message }: { message: string }) {
+  return (
+    <div style={{ minHeight: "100vh", background: "#0A0A0A", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+      <div style={{ textAlign: "center", maxWidth: 360 }}>
+        <div style={{ fontSize: 36, marginBottom: 14 }}>⚠️</div>
+        <h2 style={{ color: "#fff", fontWeight: 700, marginBottom: 10 }}>Dashboard Error</h2>
+        <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 14, lineHeight: 1.7 }}>{message}</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Styles ────────────────────────────────────────────────────────────────────
+
+const pg = {
+  root: { minHeight: "100vh", background: "#0A0A0A", fontFamily: "-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif" } as React.CSSProperties,
+  main: (isMobile: boolean) => ({
+    maxWidth: 1300,
+    margin: "0 auto",
+    padding: isMobile ? "16px 12px 60px" : "28px 24px 80px",
+  }) as React.CSSProperties,
+};
+
+const nav = {
+  bar: {
+    background: "rgba(10,10,10,0.9)",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
+    borderBottom: "1px solid rgba(255,255,255,0.07)",
+    position: "sticky" as const,
+    top: 0,
+    zIndex: 100,
+  } as React.CSSProperties,
+  inner: {
+    maxWidth: 1300,
+    margin: "0 auto",
+    padding: "0 20px",
+    height: 56,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  } as React.CSSProperties,
+  left: { display: "flex", alignItems: "center", gap: 10, flexShrink: 0 } as React.CSSProperties,
+  logoBox: { width: 30, height: 30, borderRadius: 7, background: "linear-gradient(135deg,#FFC700,#D4A000)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 10, color: "#1A1A1A", flexShrink: 0 } as React.CSSProperties,
+  logoText: { fontWeight: 900, fontSize: 10, color: "#1A1A1A" } as React.CSSProperties,
+  brand: { color: "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: 15, letterSpacing: -0.3 } as React.CSSProperties,
+  right: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" as const, justifyContent: "flex-end" } as React.CSSProperties,
+  portalLink: { color: "rgba(255,255,255,0.3)", fontSize: 12, textDecoration: "none", padding: "6px 10px" } as React.CSSProperties,
+};
+
+const card = {
+  box: {
+    background: "rgba(255,255,255,0.04)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 16,
+    padding: "20px 22px",
+    marginBottom: 16,
+  } as React.CSSProperties,
+  title: { fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.85)", letterSpacing: -0.2 } as React.CSSProperties,
+};
+
+const tbl = {
+  table: { width: "100%", borderCollapse: "collapse" as const, fontSize: 13 } as React.CSSProperties,
+  th: { textAlign: "left" as const, padding: "10px 14px", fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)", textTransform: "uppercase" as const, letterSpacing: 0.6, whiteSpace: "nowrap" as const } as React.CSSProperties,
+  td: { padding: "11px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.75)", verticalAlign: "middle" as const } as React.CSSProperties,
+};
+
+const badge = {
+  red: { background: "rgba(239,68,68,0.15)", color: "#f87171", fontSize: 11, padding: "2px 10px", borderRadius: 20, fontWeight: 700, border: "1px solid rgba(239,68,68,0.25)" } as React.CSSProperties,
+  yellow: { background: "rgba(255,199,0,0.12)", color: "#FFC700", fontSize: 11, padding: "2px 10px", borderRadius: 20, fontWeight: 600, border: "1px solid rgba(255,199,0,0.2)", whiteSpace: "nowrap" as const } as React.CSSProperties,
+  blue: { background: "rgba(99,102,241,0.15)", color: "#818cf8", fontSize: 11, padding: "2px 10px", borderRadius: 20, fontWeight: 600, border: "1px solid rgba(99,102,241,0.25)", whiteSpace: "nowrap" as const } as React.CSSProperties,
+};
+
+const modal = {
+  overlay: { position: "fixed" as const, inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 } as React.CSSProperties,
+  box: { background: "#111", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, width: "100%", maxWidth: 600, maxHeight: "85vh", display: "flex", flexDirection: "column" as const, overflow: "hidden", boxShadow: "0 40px 100px rgba(0,0,0,0.8)" } as React.CSSProperties,
+  header: { padding: "18px 22px", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "space-between" } as React.CSSProperties,
+  title: { fontSize: 15, fontWeight: 700, color: "#fff" } as React.CSSProperties,
+  closeBtn: { background: "none", border: "none", fontSize: 22, cursor: "pointer", color: "rgba(255,255,255,0.3)", lineHeight: 1, padding: "0 4px" } as React.CSSProperties,
+  body: { flex: 1, overflowY: "auto" as const, padding: "18px 22px", fontSize: 12, lineHeight: 1.75, color: "rgba(255,255,255,0.55)", fontFamily: "monospace", margin: 0, whiteSpace: "pre-wrap" as const, background: "rgba(255,255,255,0.02)" } as React.CSSProperties,
+  footer: { padding: "14px 22px", borderTop: "1px solid rgba(255,255,255,0.08)", display: "flex", gap: 10, justifyContent: "flex-end" } as React.CSSProperties,
 };
