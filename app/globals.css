@@ -1,26 +1,33 @@
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@import "tailwindcss";
+
+@theme {
+  --color-pw-yellow: #FFC700;
+  --color-pw-yellow-hover: #E6B400;
+  --color-pw-yellow-light: #FFFBEB;
+  --color-pw-black: #0A0A0A;
 }
 
-:root {
-  --pw-yellow: #FFC700;
-  --pw-dark: #0A0A0A;
-  --pw-surface: rgba(255, 255, 255, 0.05);
-  --pw-border: rgba(255, 255, 255, 0.1);
-  --pw-text: #FFFFFF;
-  --pw-muted: rgba(255, 255, 255, 0.45);
-  --pw-bg: #0A0A0A;
-}
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
-  background: var(--pw-bg);
-  color: var(--pw-text);
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+    background: #ffffff;
+    color: #111111;
+    min-height: 100vh;
+  }
+
+  select option {
+    background: #fff;
+    color: #111;
+  }
 }
 
 @keyframes spin {
@@ -28,7 +35,7 @@ body {
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -37,16 +44,7 @@ body {
   100% { background-position: 400px 0; }
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
-}
-
-@keyframes glow-pulse {
-  0%, 100% { opacity: 0.35; transform: scale(1); }
-  50%       { opacity: 0.55; transform: scale(1.05); }
-}
-
+/* Legacy animation classes — still used by AdminDashboard */
 .animate-in {
   animation: fadeInUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -56,18 +54,14 @@ body {
 .delay-4 { animation-delay: 0.28s; }
 
 .skeleton-line {
-  background: linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.11) 50%, rgba(255,255,255,0.06) 75%);
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
   background-size: 400px 100%;
   animation: shimmer 1.6s infinite;
   border-radius: 6px;
 }
 
-::-webkit-scrollbar { width: 5px; }
+/* Clean scrollbar */
+::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
-
-select option {
-  background: #1a1a1a;
-  color: #fff;
-}
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }

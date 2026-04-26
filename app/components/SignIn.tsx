@@ -2,11 +2,12 @@
 
 import { signIn } from "next-auth/react";
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const ERROR_MESSAGES: Record<string, string> = {
-  AccessDenied: "This Google account is not authorised. Sign in with your @pw.live account.",
-  OAuthSignin: "Could not start Google sign-in. Please try again.",
-  OAuthCallback: "Google sign-in failed. Check your network and try again.",
+  AccessDenied: "This Google account isn't authorised. Sign in with your @pw.live account.",
+  OAuthSignin: "Couldn't start Google sign-in. Please try again.",
+  OAuthCallback: "Google sign-in failed. Check your network and retry.",
   OAuthAccountNotLinked: "This email is linked to a different sign-in method.",
   Configuration: "Server configuration error. Contact your admin.",
   Default: "Sign-in failed. Please try again.",
@@ -14,7 +15,6 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 export default function SignIn({ error }: { error?: string }) {
   const [loading, setLoading] = useState(false);
-
   const errorMsg = error ? (ERROR_MESSAGES[error] ?? ERROR_MESSAGES.Default) : null;
 
   async function handleSignIn() {
@@ -23,343 +23,214 @@ export default function SignIn({ error }: { error?: string }) {
   }
 
   return (
-    <div style={s.page}>
-      {/* Glow orbs */}
-      <div style={{ ...s.glow, top: "-10%", left: "-5%", width: 560, height: 560 }} />
-      <div style={{ ...s.glow, bottom: "-15%", right: "-5%", width: 380, height: 380, opacity: 0.22 }} />
-      <div style={{ ...s.glowWhite, top: "40%", right: "15%" }} />
+    <div className="min-h-screen flex flex-col lg:flex-row">
 
-      {/* Subtle dot grid */}
-      <div style={s.dotGrid} />
+      {/* ═══ LEFT — Yellow brand panel ═══ */}
+      <motion.div
+        initial={{ opacity: 0, x: -24 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+        className="relative lg:w-[44%] bg-[#FFC700] flex flex-col overflow-hidden
+                   px-8 pt-10 pb-8 lg:px-14 lg:py-12 min-h-[300px] lg:min-h-screen"
+      >
+        {/* Subtle dot-grid texture */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage: "radial-gradient(circle, #000 1px, transparent 1px)",
+            backgroundSize: "22px 22px",
+          }}
+        />
 
-      {/* Card */}
-      <div style={s.card} className="animate-in">
-        {/* Brand row */}
-        <div style={s.brandRow} className="animate-in delay-1">
-          <div style={s.logoBox}>
-            <span style={s.logoText}>PW</span>
+        {/* PW Logo */}
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="w-9 h-9 bg-black/90 rounded-xl flex items-center justify-center shrink-0 shadow-sm">
+            <span className="text-[#FFC700] font-black text-[11px] tracking-tight">PW</span>
           </div>
-          <span style={s.brandName}>Physics Wallah</span>
+          <span className="font-semibold text-black/60 text-sm tracking-tight">Physics Wallah</span>
         </div>
 
-        {/* Heading */}
-        <div style={s.headingBlock} className="animate-in delay-1">
-          <h1 style={s.title}>Faculty Portal.</h1>
-          <p style={s.subtitle}>
-            Securely access your result PDFs,<br />
-            reports and resources.
-          </p>
+        {/* Hero heading */}
+        <div className="relative z-10 flex-1 flex flex-col justify-center py-10 lg:py-0">
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15, duration: 0.5 }}
+            className="text-[10px] font-bold tracking-[3px] text-black/35 uppercase mb-5 flex items-center gap-2"
+          >
+            <span className="w-5 h-px bg-black/25 shrink-0" />
+            Internal Platform
+          </motion.p>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="font-black text-black leading-[0.88] tracking-[-0.05em] mb-6"
+            style={{ fontSize: "clamp(52px, 7vw, 84px)" }}
+          >
+            Faculty<br />Portal.
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.35, duration: 0.5 }}
+            className="hidden lg:block text-sm text-black/50 leading-relaxed max-w-xs font-medium"
+          >
+            Centralised access to result PDFs,<br />batch analytics and faculty resources.
+          </motion.p>
         </div>
 
-        {/* Error banner */}
-        {errorMsg && (
-          <div style={s.errorBox} className="animate-in delay-1">
-            <span style={s.errorIcon}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-            </span>
-            <span>{errorMsg}</span>
-          </div>
-        )}
-
-        {/* Google button */}
-        <button
-          style={{ ...s.googleBtn, opacity: loading ? 0.65 : 1, cursor: loading ? "not-allowed" : "pointer" }}
-          onClick={handleSignIn}
-          disabled={loading}
-          className="animate-in delay-2"
-          onMouseEnter={(e) => {
-            if (!loading) {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.09)";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,199,0,0.55)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 0 3px rgba(255,199,0,0.08), 0 8px 24px rgba(0,0,0,0.3)";
-            }
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
-            (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.13)";
-            (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
-          }}
+        {/* Stats — desktop only */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+          className="relative z-10 hidden lg:flex border-t border-black/10 pt-7 gap-0"
         >
-          {loading ? (
-            <span style={s.btnSpinner} />
-          ) : (
-            <GoogleIcon />
-          )}
-          <span>{loading ? "Signing in…" : "Continue with Google"}</span>
-        </button>
+          {[
+            { n: "2,400+", l: "Faculty members" },
+            { n: "100K+", l: "Reports generated" },
+            { n: "48",    l: "Active batches" },
+          ].map((s, i) => (
+            <div key={s.l} className={`flex-1 ${i < 2 ? "border-r border-black/10 pr-6 mr-6" : ""}`}>
+              <div className="text-[22px] font-extrabold text-black tracking-tight leading-none">{s.n}</div>
+              <div className="text-[11px] text-black/38 mt-1.5 font-medium">{s.l}</div>
+            </div>
+          ))}
+        </motion.div>
+      </motion.div>
 
-        {/* Note */}
-        <div style={s.noteRow} className="animate-in delay-2">
-          <span style={s.noteDot} />
-          <span style={s.noteText}>Only @pw.live accounts are permitted.</span>
+      {/* ═══ RIGHT — Sign-in form ═══ */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.45, delay: 0.1 }}
+        className="flex-1 bg-white flex items-center justify-center px-6 py-12 lg:py-0"
+      >
+        <div className="w-full max-w-[340px]">
+
+          {/* Mobile-only brand */}
+          <div className="flex items-center gap-2.5 mb-10 lg:hidden">
+            <div className="w-8 h-8 bg-[#FFC700] rounded-lg flex items-center justify-center shrink-0">
+              <span className="font-black text-[11px] text-black">PW</span>
+            </div>
+            <span className="font-semibold text-gray-700 text-sm">Physics Wallah</span>
+          </div>
+
+          {/* Form heading */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25, duration: 0.5 }}
+            className="mb-8"
+          >
+            <p className="text-[10px] font-bold tracking-[2.5px] text-gray-400 uppercase mb-3">Secure Access</p>
+            <h2 className="text-[26px] font-bold text-gray-900 tracking-tight leading-tight mb-2">
+              Sign in
+            </h2>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              Use your @pw.live Google account to continue.
+            </p>
+          </motion.div>
+
+          {/* Error banner */}
+          <AnimatePresence>
+            {errorMsg && (
+              <motion.div
+                initial={{ opacity: 0, y: -8, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden mb-5"
+              >
+                <div className="flex items-start gap-2.5 p-3.5 bg-red-50 border border-red-100 rounded-xl">
+                  <svg className="w-4 h-4 mt-0.5 shrink-0 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  <span className="text-sm text-red-600 leading-relaxed">{errorMsg}</span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Google button */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            <motion.button
+              whileHover={{ scale: 1.008, boxShadow: "0 4px 20px rgba(0,0,0,0.09)" }}
+              whileTap={{ scale: 0.995 }}
+              onClick={handleSignIn}
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-3 px-5 py-[14px]
+                         bg-white border border-gray-200 rounded-2xl
+                         text-[14px] font-semibold text-gray-800
+                         hover:bg-gray-50 hover:border-gray-300
+                         transition-colors duration-150 shadow-sm
+                         disabled:opacity-50 disabled:cursor-not-allowed
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FFC700]"
+            >
+              {loading ? (
+                <span
+                  className="w-4 h-4 rounded-full border-2 border-gray-200 border-t-[#FFC700] shrink-0"
+                  style={{ animation: "spin 0.75s linear infinite" }}
+                />
+              ) : (
+                <GoogleIcon />
+              )}
+              <span>{loading ? "Signing in…" : "Continue with Google"}</span>
+            </motion.button>
+
+            <p className="text-center text-xs text-gray-400 mt-4">
+              Only{" "}
+              <span className="font-semibold text-gray-600">@pw.live</span>{" "}
+              accounts are permitted.
+            </p>
+          </motion.div>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 my-7">
+            <div className="flex-1 h-px bg-gray-100" />
+            <span className="text-[11px] text-gray-300 font-medium whitespace-nowrap">Secured by Google OAuth</span>
+            <div className="flex-1 h-px bg-gray-100" />
+          </div>
+
+          {/* Trust list */}
+          <motion.ul
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.45, duration: 0.5 }}
+            className="space-y-3"
+          >
+            {[
+              "No passwords stored — Google handles all authentication",
+              "Role-based access — Admin and Faculty tiers enforced",
+              "Session expires automatically after inactivity",
+            ].map((point) => (
+              <li key={point} className="flex items-start gap-2.5 text-xs text-gray-400 leading-relaxed">
+                <span className="w-1 h-1 rounded-full bg-[#FFC700] shrink-0 mt-[5px]" />
+                {point}
+              </li>
+            ))}
+          </motion.ul>
         </div>
-
-        <div style={s.divider} className="animate-in delay-3" />
-
-        {/* Trust badges */}
-        <div style={s.badges} className="animate-in delay-3">
-          <TrustBadge icon={<ShieldIcon />} label="Secure login" />
-          <TrustBadge icon={<BoltIcon />} label="Fast access" />
-          <TrustBadge icon={<BuildingIcon />} label="Internal use" />
-        </div>
-      </div>
-
-      {/* Corner sparkle */}
-      <span style={s.sparkle} aria-hidden>✦</span>
-    </div>
-  );
-}
-
-function TrustBadge({ icon, label }: { icon: React.ReactNode; label: string }) {
-  return (
-    <div style={s.badge}>
-      <span style={s.badgeIcon}>{icon}</span>
-      <span style={s.badgeLabel}>{label}</span>
+      </motion.div>
     </div>
   );
 }
 
 function GoogleIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 48 48" style={{ flexShrink: 0 }}>
-      <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.6 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.5 6.5 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.9z" />
-      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13 24 13c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.5 6.5 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
-      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.4 26.7 36 24 36c-5.2 0-9.6-3.4-11.2-8H6.5C9.8 35.5 16.5 44 24 44z" />
-      <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.6l6.2 5.2C37 38.6 44 33 44 24c0-1.3-.1-2.7-.4-3.9z" />
+    <svg width="16" height="16" viewBox="0 0 48 48" style={{ flexShrink: 0 }}>
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
     </svg>
   );
 }
-
-function ShieldIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    </svg>
-  );
-}
-
-function BoltIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-    </svg>
-  );
-}
-
-function BuildingIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="7" width="20" height="14" rx="2" />
-      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-    </svg>
-  );
-}
-
-const s: Record<string, React.CSSProperties> = {
-  page: {
-    minHeight: "100vh",
-    background: "#0A0A0A",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-    overflow: "hidden",
-    padding: "24px 20px",
-  },
-  glow: {
-    position: "absolute",
-    borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(255,199,0,0.28) 0%, rgba(255,199,0,0.06) 50%, transparent 70%)",
-    opacity: 0.4,
-    pointerEvents: "none",
-    animation: "glow-pulse 6s ease-in-out infinite",
-  },
-  glowWhite: {
-    position: "absolute",
-    width: 120,
-    height: 120,
-    borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%)",
-    pointerEvents: "none",
-  },
-  dotGrid: {
-    position: "absolute",
-    inset: 0,
-    backgroundImage: "radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)",
-    backgroundSize: "28px 28px",
-    pointerEvents: "none",
-  },
-  card: {
-    position: "relative",
-    zIndex: 10,
-    width: "100%",
-    maxWidth: 408,
-    background: "rgba(255,255,255,0.04)",
-    backdropFilter: "blur(32px)",
-    WebkitBackdropFilter: "blur(32px)",
-    border: "1px solid rgba(255,255,255,0.1)",
-    borderRadius: 28,
-    padding: "44px 40px 40px",
-    boxShadow: "0 40px 100px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.09)",
-    display: "flex",
-    flexDirection: "column",
-    gap: 0,
-  },
-  brandRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: 11,
-    marginBottom: 36,
-  },
-  logoBox: {
-    width: 42,
-    height: 42,
-    borderRadius: 11,
-    background: "linear-gradient(135deg, #FFC700 0%, #D4A000 100%)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    boxShadow: "0 4px 18px rgba(255,199,0,0.35)",
-    flexShrink: 0,
-  },
-  logoText: {
-    fontWeight: 900,
-    fontSize: 14,
-    color: "#1A1A1A",
-    letterSpacing: -0.3,
-  },
-  brandName: {
-    fontWeight: 600,
-    fontSize: 15,
-    color: "rgba(255,255,255,0.75)",
-    letterSpacing: -0.2,
-  },
-  headingBlock: {
-    marginBottom: 32,
-  },
-  title: {
-    fontSize: 38,
-    fontWeight: 800,
-    color: "#FFFFFF",
-    letterSpacing: -1.8,
-    lineHeight: 1.05,
-    marginBottom: 14,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: "rgba(255,255,255,0.45)",
-    lineHeight: 1.75,
-  },
-  googleBtn: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 11,
-    width: "100%",
-    padding: "14px 20px",
-    background: "rgba(255,255,255,0.05)",
-    border: "1px solid rgba(255,255,255,0.13)",
-    borderRadius: 14,
-    fontSize: 15,
-    fontWeight: 600,
-    color: "#FFFFFF",
-    transition: "all 0.2s ease",
-    letterSpacing: -0.2,
-    marginBottom: 14,
-  },
-  btnSpinner: {
-    display: "block",
-    width: 17,
-    height: 17,
-    border: "2px solid rgba(255,255,255,0.18)",
-    borderTopColor: "#FFC700",
-    borderRadius: "50%",
-    animation: "spin 0.75s linear infinite",
-    flexShrink: 0,
-  },
-  noteRow: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    marginBottom: 28,
-  },
-  noteDot: {
-    display: "block",
-    width: 6,
-    height: 6,
-    borderRadius: "50%",
-    background: "#FFC700",
-    flexShrink: 0,
-    opacity: 0.8,
-  },
-  noteText: {
-    fontSize: 12,
-    color: "rgba(255,255,255,0.3)",
-    letterSpacing: 0.1,
-  },
-  divider: {
-    height: 1,
-    background: "rgba(255,255,255,0.07)",
-    marginBottom: 24,
-  },
-  badges: {
-    display: "flex",
-    justifyContent: "center",
-    gap: 8,
-    flexWrap: "wrap" as const,
-  },
-  badge: {
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-    padding: "6px 13px",
-    background: "rgba(255,255,255,0.04)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 100,
-  },
-  badgeIcon: {
-    display: "flex",
-    alignItems: "center",
-    color: "rgba(255,255,255,0.35)",
-  },
-  badgeLabel: {
-    fontSize: 11,
-    fontWeight: 500,
-    color: "rgba(255,255,255,0.35)",
-    letterSpacing: 0.1,
-  },
-  errorBox: {
-    display: "flex",
-    alignItems: "flex-start",
-    gap: 10,
-    padding: "12px 16px",
-    background: "rgba(239,68,68,0.1)",
-    border: "1px solid rgba(239,68,68,0.25)",
-    borderRadius: 12,
-    fontSize: 13,
-    color: "#fca5a5",
-    lineHeight: 1.5,
-    marginBottom: 4,
-  },
-  errorIcon: {
-    display: "flex",
-    alignItems: "center",
-    flexShrink: 0,
-    marginTop: 1,
-    color: "#f87171",
-  },
-  sparkle: {
-    position: "fixed",
-    bottom: 28,
-    right: 28,
-    fontSize: 22,
-    color: "rgba(255,199,0,0.35)",
-    pointerEvents: "none",
-    userSelect: "none",
-  },
-};
