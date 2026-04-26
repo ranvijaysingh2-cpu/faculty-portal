@@ -7,3 +7,9 @@ out/
 *.pem
 .vercel
 .claude/
+
+# Auto-generated
+tsconfig.tsbuildinfo
+
+# Design previews (not app code)
+preview-*.html
