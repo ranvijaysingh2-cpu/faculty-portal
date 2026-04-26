@@ -13,51 +13,41 @@ const ERROR_MESSAGES: Record<string, string> = {
   Default: "Sign-in failed. Please try again.",
 };
 
-const TILES = [
+const ROLES = [
   {
-    n: "2,400+",
-    l: "Faculty members",
-    delay: 0.38,
     icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFC700" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
       </svg>
     ),
-    pos: { right: "calc(100% + 32px)", top: "18%" },
-    rotate: "-4deg",
+    title: "Faculty",
+    desc: "Test PDFs for your assigned batches",
   },
   {
-    n: "100K+",
-    l: "Reports generated",
-    delay: 0.48,
     icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFC700" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
-        <line x1="16" y1="13" x2="8" y2="13" />
-        <line x1="16" y1="17" x2="8" y2="17" />
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
       </svg>
     ),
-    pos: { left: "calc(100% + 32px)", top: "18%" },
-    rotate: "4deg",
+    title: "Center Head",
+    desc: "All results across your center",
   },
   {
-    n: "48",
-    l: "Active batches",
-    delay: 0.56,
     icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFC700" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-        <path d="M6 12v5c3 3 9 3 12 0v-5" />
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" />
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
       </svg>
     ),
-    pos: { left: "50%", bottom: "-72px" },
-    rotate: "-2deg",
-    centerX: true,
+    title: "Region Head",
+    desc: "All results across your region",
   },
+];
+
+const PDF_TYPES = [
+  "Student Performance Reports",
+  "Question Level Insights",
+  "Cohort Data — JEE / NEET (Vidyapeeth)",
 ];
 
 export default function SignIn({ error }: { error?: string }) {
@@ -70,9 +60,11 @@ export default function SignIn({ error }: { error?: string }) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#FAFAF8" }}>
-
-      {/* ── Grain texture ── */}
+    <div
+      className="h-screen flex flex-col overflow-hidden"
+      style={{ background: "#FAFAF8" }}
+    >
+      {/* Grain texture */}
       <div
         className="pointer-events-none fixed inset-0 z-0"
         style={{
@@ -81,24 +73,22 @@ export default function SignIn({ error }: { error?: string }) {
           backgroundSize: "180px 180px",
         }}
       />
-
-      {/* ── Ambient yellow glow ── */}
+      {/* Ambient glow */}
       <div
         className="pointer-events-none fixed left-1/2 top-0 -translate-x-1/2 z-0"
         style={{
-          width: 900,
-          height: 560,
-          background:
-            "radial-gradient(ellipse at 50% 0%, rgba(255,199,0,0.22) 0%, rgba(255,199,0,0.05) 45%, transparent 70%)",
+          width: 800,
+          height: 500,
+          background: "radial-gradient(ellipse at 50% 0%, rgba(255,199,0,0.22) 0%, rgba(255,199,0,0.05) 45%, transparent 70%)",
         }}
       />
 
-      {/* ── Navbar ── */}
+      {/* Navbar */}
       <motion.header
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="relative z-10 flex items-center justify-between px-5 py-4 sm:px-9 sm:py-5"
+        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] as const }}
+        className="relative z-10 shrink-0 flex items-center justify-between px-5 py-4 sm:px-8"
       >
         <div className="flex items-center gap-2.5">
           <div
@@ -109,260 +99,164 @@ export default function SignIn({ error }: { error?: string }) {
           </div>
           <span className="font-semibold text-gray-800 text-[13px] tracking-tight">Physics Wallah</span>
         </div>
-
         <div
           className="flex items-center gap-1.5 rounded-full px-3 py-1.5"
-          style={{
-            background: "#fff",
-            border: "1px solid rgba(0,0,0,0.07)",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-          }}
+          style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}
         >
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
           <span className="text-[11px] font-semibold text-gray-400 tracking-wide">Internal</span>
         </div>
       </motion.header>
 
-      {/* ── Main ── */}
-      <main className="relative z-10 flex-1 flex items-center justify-center px-5 py-8">
-        <div className="flex flex-col items-center w-full">
+      {/* Main — vertically centered, flex-1 */}
+      <main className="relative z-10 flex-1 flex items-center justify-center px-5 overflow-hidden">
+        <div className="flex flex-col items-center w-full max-w-[388px]">
 
-          {/* Eyebrow tag */}
+          {/* Eyebrow + heading */}
           <motion.div
-            initial={{ opacity: 0, y: 14 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="mb-5"
+            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] as const }}
+            className="text-center mb-6"
           >
             <div
-              className="inline-flex items-center gap-2 rounded-full px-4 py-1.5"
-              style={{
-                background: "rgba(255,199,0,0.12)",
-                border: "1px solid rgba(255,199,0,0.28)",
-              }}
+              className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 mb-4"
+              style={{ background: "rgba(255,199,0,0.12)", border: "1px solid rgba(255,199,0,0.28)" }}
             >
-              <span
-                className="w-1.5 h-1.5 rounded-full shrink-0"
-                style={{ background: "#FFC700" }}
-              />
-              <span
-                className="text-[11px] font-bold tracking-[1.5px] uppercase"
-                style={{ color: "#8A6200" }}
-              >
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: "#FFC700" }} />
+              <span className="text-[11px] font-bold tracking-[1.5px] uppercase" style={{ color: "#8A6200" }}>
                 Faculty Portal
               </span>
             </div>
+            <h1
+              className="font-black text-gray-950 leading-[0.9] tracking-[-0.04em] select-none"
+              style={{ fontSize: "clamp(40px, 7vw, 72px)" }}
+            >
+              Welcome<br />
+              <span style={{ color: "#FFC700" }}>Back.</span>
+            </h1>
           </motion.div>
 
-          {/* Heading */}
-          <motion.h1
-            initial={{ opacity: 0, y: 22 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.07, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-            className="font-black text-gray-950 leading-[0.88] tracking-[-0.04em] text-center mb-10 select-none"
-            style={{ fontSize: "clamp(44px, 8vw, 86px)" }}
-          >
-            Welcome<br />
-            <span style={{ color: "#FFC700" }}>Back.</span>
-          </motion.h1>
-
-          {/* Card + floating tiles wrapper */}
-          <div className="relative w-full max-w-[388px]">
-
-            {/* Floating bento tiles — xl only */}
-            {TILES.map((tile) => (
-              <motion.div
-                key={tile.l}
-                initial={{ opacity: 0, scale: 0.82, y: 8 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ delay: tile.delay, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-                className="hidden xl:flex absolute flex-col gap-1.5 pointer-events-none"
-                style={{
-                  ...tile.pos,
-                  transform: tile.centerX
-                    ? `translateX(-50%) rotate(${tile.rotate})`
-                    : `rotate(${tile.rotate})`,
-                  background: "#fff",
-                  border: "1px solid rgba(0,0,0,0.07)",
-                  borderRadius: 18,
-                  padding: "14px 18px",
-                  minWidth: 130,
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.07)",
-                }}
-              >
-                <div
-                  className="w-7 h-7 rounded-lg flex items-center justify-center mb-0.5"
-                  style={{ background: "rgba(255,199,0,0.12)" }}
-                >
-                  {tile.icon}
-                </div>
-                <div className="text-[19px] font-extrabold text-gray-900 tracking-tight leading-none">
-                  {tile.n}
-                </div>
-                <div className="text-[11px] text-gray-400 font-medium leading-tight mt-0.5">
-                  {tile.l}
-                </div>
-              </motion.div>
-            ))}
-
-            {/* ── Sign-in card ── */}
-            <motion.div
-              initial={{ opacity: 0, y: 30, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: 0.16, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full rounded-3xl p-7 sm:p-8"
-              style={{
-                background: "#fff",
-                border: "1px solid rgba(0,0,0,0.07)",
-                boxShadow:
-                  "0 2px 4px rgba(0,0,0,0.03), 0 8px 32px rgba(0,0,0,0.07), 0 24px 64px rgba(0,0,0,0.04)",
-              }}
-            >
-              {/* Card header */}
-              <div className="text-center mb-6">
-                <h2 className="text-[16px] font-bold text-gray-900 tracking-tight mb-1.5">
-                  Sign in to your account
-                </h2>
-                <p className="text-[13px] text-gray-500 leading-relaxed">
-                  Use your{" "}
-                  <span className="font-semibold text-gray-700">@pw.live</span>
-                  {" "}Google account to continue
-                </p>
-              </div>
-
-              {/* Error banner */}
-              <AnimatePresence>
-                {errorMsg && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8, height: 0 }}
-                    animate={{ opacity: 1, y: 0, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="overflow-hidden mb-5"
-                  >
-                    <div
-                      className="flex items-start gap-2.5 p-3.5 rounded-xl"
-                      style={{ background: "#FFF1F0", border: "1px solid #FFD0CC" }}
-                    >
-                      <svg className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#EF4444" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="12" y1="8" x2="12" y2="12" />
-                        <line x1="12" y1="16" x2="12.01" y2="16" />
-                      </svg>
-                      <span className="text-[13px] leading-relaxed" style={{ color: "#C0392B" }}>
-                        {errorMsg}
-                      </span>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Google button */}
-              <motion.button
-                whileHover={{
-                  scale: 1.016,
-                  boxShadow: "0 6px 28px rgba(0,0,0,0.12)",
-                }}
-                whileTap={{ scale: 0.984 }}
-                onClick={handleSignIn}
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-3 text-[14px] font-semibold text-gray-800 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
-                style={{
-                  padding: "13px 20px",
-                  background: "#fff",
-                  border: "1px solid rgba(0,0,0,0.12)",
-                  borderRadius: 16,
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                }}
-                onFocus={(e) => (e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,199,0,0.35)")}
-                onBlur={(e) => (e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.06)")}
-              >
-                {loading ? (
-                  <span
-                    className="w-4 h-4 rounded-full border-2 shrink-0"
-                    style={{
-                      borderColor: "#e5e7eb",
-                      borderTopColor: "#FFC700",
-                      animation: "spin 0.75s linear infinite",
-                    }}
-                  />
-                ) : (
-                  <GoogleIcon />
-                )}
-                <span>{loading ? "Signing in…" : "Continue with Google"}</span>
-              </motion.button>
-
-              {/* Divider */}
-              <div className="flex items-center gap-3 my-5">
-                <div className="flex-1 h-px" style={{ background: "rgba(0,0,0,0.07)" }} />
-                <span
-                  className="text-[10px] font-bold tracking-[2px] whitespace-nowrap"
-                  style={{ color: "#C8C8C8" }}
-                >
-                  OAUTH 2.0 SECURED
-                </span>
-                <div className="flex-1 h-px" style={{ background: "rgba(0,0,0,0.07)" }} />
-              </div>
-
-              {/* Trust list */}
-              <ul className="space-y-2.5">
-                {[
-                  "No passwords stored — Google handles all authentication",
-                  "Admin & Faculty role access enforced at session level",
-                  "Session expires automatically after inactivity",
-                ].map((point) => (
-                  <li key={point} className="flex items-start gap-2 text-[12px] leading-relaxed" style={{ color: "#9CA3AF" }}>
-                    <span
-                      className="w-1 h-1 rounded-full shrink-0 mt-[5px]"
-                      style={{ background: "#FFC700" }}
-                    />
-                    {point}
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          </div>
-
-          {/* Stats bar — shown below xl, hidden above */}
+          {/* Card */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-            className="xl:hidden flex items-stretch mt-6 w-full max-w-[388px] rounded-2xl overflow-hidden"
+            initial={{ opacity: 0, y: 24, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.12, duration: 0.55, ease: [0.16, 1, 0.3, 1] as const }}
+            className="w-full rounded-3xl p-6 sm:p-7"
             style={{
               background: "#fff",
               border: "1px solid rgba(0,0,0,0.07)",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.03), 0 8px 32px rgba(0,0,0,0.07), 0 24px 64px rgba(0,0,0,0.04)",
             }}
           >
-            {[
-              { n: "2,400+", l: "Faculty" },
-              { n: "100K+", l: "Reports" },
-              { n: "48", l: "Batches" },
-            ].map((s, i) => (
-              <div
-                key={s.l}
-                className="flex-1 flex flex-col items-center justify-center py-3.5"
-                style={i < 2 ? { borderRight: "1px solid rgba(0,0,0,0.07)" } : {}}
-              >
-                <div className="text-[15px] font-extrabold text-gray-900 tracking-tight leading-none">
-                  {s.n}
+            {/* Card header */}
+            <div className="text-center mb-5">
+              <h2 className="text-[15px] font-bold text-gray-900 tracking-tight mb-1">
+                Sign in to your account
+              </h2>
+              <p className="text-[12.5px] text-gray-500">
+                Use your <span className="font-semibold text-gray-700">@pw.live</span> Google account
+              </p>
+            </div>
+
+            {/* Error */}
+            <AnimatePresence>
+              {errorMsg && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, height: 0 }}
+                  animate={{ opacity: 1, y: 0, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden mb-4"
+                >
+                  <div
+                    className="flex items-start gap-2.5 p-3 rounded-xl"
+                    style={{ background: "#FFF1F0", border: "1px solid #FFD0CC" }}
+                  >
+                    <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: "#EF4444" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    <span className="text-[12px] leading-relaxed" style={{ color: "#C0392B" }}>{errorMsg}</span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Google button */}
+            <motion.button
+              whileHover={{ scale: 1.015, boxShadow: "0 6px 28px rgba(0,0,0,0.12)" }}
+              whileTap={{ scale: 0.985 }}
+              onClick={handleSignIn}
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-3 text-[14px] font-semibold text-gray-800 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer focus:outline-none"
+              style={{
+                padding: "12px 20px",
+                background: "#fff",
+                border: "1px solid rgba(0,0,0,0.12)",
+                borderRadius: 14,
+                boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+              }}
+              onFocus={(e) => (e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,199,0,0.35)")}
+              onBlur={(e) => (e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.06)")}
+            >
+              {loading ? (
+                <span
+                  className="w-4 h-4 rounded-full border-2 shrink-0"
+                  style={{ borderColor: "#e5e7eb", borderTopColor: "#FFC700", animation: "spin 0.75s linear infinite" }}
+                />
+              ) : <GoogleIcon />}
+              <span>{loading ? "Signing in…" : "Continue with Google"}</span>
+            </motion.button>
+
+            {/* Divider */}
+            <div className="flex items-center gap-2.5 my-4">
+              <div className="flex-1 h-px" style={{ background: "rgba(0,0,0,0.07)" }} />
+              <span className="text-[10px] font-bold tracking-[2px] whitespace-nowrap" style={{ color: "#C8C8C8" }}>
+                WHO CAN ACCESS
+              </span>
+              <div className="flex-1 h-px" style={{ background: "rgba(0,0,0,0.07)" }} />
+            </div>
+
+            {/* Role info */}
+            <div className="space-y-2 mb-4">
+              {ROLES.map((r) => (
+                <div key={r.title} className="flex items-center gap-3 rounded-xl px-3 py-2.5"
+                  style={{ background: "rgba(255,199,0,0.05)", border: "1px solid rgba(255,199,0,0.12)" }}>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                    style={{ background: "rgba(255,199,0,0.15)", color: "#8A6200" }}>
+                    {r.icon}
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[12px] font-bold text-gray-800">{r.title}</span>
+                    <span className="text-[11px] text-gray-400 ml-1.5">{r.desc}</span>
+                  </div>
                 </div>
-                <div className="text-[10px] text-gray-400 mt-1 font-medium">{s.l}</div>
-              </div>
-            ))}
+              ))}
+            </div>
+
+            {/* PDF types */}
+            <div className="rounded-xl px-3 py-2.5" style={{ background: "rgba(0,0,0,0.025)", border: "1px solid rgba(0,0,0,0.06)" }}>
+              <p className="text-[10px] font-bold tracking-[1px] uppercase text-gray-400 mb-1.5">Available PDFs</p>
+              <ul className="space-y-1">
+                {PDF_TYPES.map((t) => (
+                  <li key={t} className="flex items-center gap-2 text-[11.5px] text-gray-500">
+                    <span className="w-1 h-1 rounded-full shrink-0" style={{ background: "#FFC700" }} />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </motion.div>
 
           {/* Footer note */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.65, duration: 0.5 }}
-            className="text-[11px] text-center mt-6"
+            transition={{ delay: 0.55, duration: 0.4 }}
+            className="text-[11px] text-center mt-4"
             style={{ color: "#C0C0C0" }}
           >
             Only <span style={{ color: "#9CA3AF", fontWeight: 600 }}>@pw.live</span> accounts are permitted
           </motion.p>
-
         </div>
       </main>
     </div>

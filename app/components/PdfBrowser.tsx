@@ -205,10 +205,17 @@ export default function PdfBrowser() {
     : null;
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA]" style={{ paddingBottom: 68 }}>
+    <div className="h-screen flex flex-col overflow-hidden" style={{ background: "#FAFAF8" }}>
+
+      {/* Grain texture */}
+      <div className="pointer-events-none fixed inset-0 z-0"
+        style={{ opacity: 0.035, backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`, backgroundSize: "180px 180px" }} />
+      {/* Ambient glow */}
+      <div className="pointer-events-none fixed left-0 top-0 z-0"
+        style={{ width: 600, height: 400, background: "radial-gradient(ellipse at 0% 0%, rgba(255,199,0,0.1) 0%, transparent 65%)" }} />
 
       {/* ── Navbar ── */}
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-100"
+      <header className="relative z-50 shrink-0 bg-white border-b border-gray-100"
         style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
         <div className="max-w-[1100px] mx-auto px-5 h-[60px] flex items-center justify-between gap-4">
 
@@ -253,8 +260,9 @@ export default function PdfBrowser() {
         </div>
       </header>
 
-      {/* ── Page body ── */}
-      <main className="max-w-[1100px] mx-auto px-5 py-8">
+      {/* ── Scrollable body ── */}
+      <div className="relative z-10 flex-1 overflow-y-auto">
+      <main className="max-w-[1100px] mx-auto px-5 py-6">
 
         {/* Welcome */}
         <motion.div
@@ -326,11 +334,6 @@ export default function PdfBrowser() {
                   Clear all
                 </button>
               )}
-              <button
-                className="px-4 py-1.5 text-xs font-bold bg-[#FFC700] text-black rounded-lg hover:bg-[#E6B400] transition-colors"
-              >
-                Apply Filters
-              </button>
             </div>
           </div>
 
@@ -423,42 +426,38 @@ export default function PdfBrowser() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <EmptyState type="select-filters" onShowAll={() => {
-                if (data?.pdfs.length && !selDate) {
-                  const sel = document.querySelector("select") as HTMLSelectElement;
-                  sel?.focus();
-                }
-              }} />
+              <EmptyState type="select-filters" />
             </motion.div>
           )}
         </AnimatePresence>
       </main>
+      </div>
 
       {/* ── Footer ── */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5"
-        style={{ height: 56, display: "flex", alignItems: "center", justifyContent: "space-between",
-          boxShadow: "0 -1px 4px rgba(0,0,0,0.04)" }}>
-        <div className="flex items-center gap-2 text-xs text-gray-400 font-medium">
+      <footer className="relative z-50 shrink-0 bg-white border-t border-gray-100 px-5"
+        style={{ height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 -1px 4px rgba(0,0,0,0.04)" }}>
+        <div className="flex items-center gap-3 text-xs text-gray-400 font-medium">
           <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
           </svg>
           <span>Secure Internal Portal</span>
           {fetchedAt && !isMobile && (
-            <span className="text-gray-300 ml-2">
-              · Synced {fetchedAt.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false })}
-            </span>
+            <span className="text-gray-300">· Synced {fetchedAt.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false })}</span>
           )}
         </div>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.97 }}
-          onClick={() => signOut({ callbackUrl: "/" })}
-          className="text-xs font-semibold text-gray-500 border border-gray-200 rounded-lg px-4 py-2
-                     hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-colors duration-150"
-        >
-          Sign out
-        </motion.button>
+        <div className="flex items-center gap-2">
+          <a href="/feedback"
+            className="text-xs font-semibold text-gray-400 border border-gray-200 rounded-lg px-3 py-1.5 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-colors duration-150">
+            Feedback
+          </a>
+          <motion.button
+            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+            onClick={() => signOut({ callbackUrl: "/" })}
+            className="text-xs font-semibold text-gray-500 border border-gray-200 rounded-lg px-3 py-1.5 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-colors duration-150"
+          >
+            Sign out
+          </motion.button>
+        </div>
       </footer>
     </div>
   );
@@ -582,12 +581,7 @@ function PdfRow({ pdf, onOpen }: { pdf: PdfRecord; onOpen: (pdf: PdfRecord) => v
   );
 }
 
-function EmptyState({
-  type, onShowAll,
-}: {
-  type: "select-filters" | "no-results";
-  onShowAll?: () => void;
-}) {
+function EmptyState({ type }: { type: "select-filters" | "no-results" }) {
   const isNoResults = type === "no-results";
 
   return (
@@ -595,7 +589,7 @@ function EmptyState({
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.35 }}
-      className="bg-white border border-gray-100 rounded-2xl py-16 px-6 flex flex-col items-center text-center"
+      className="bg-white border border-gray-100 rounded-2xl py-10 px-6 flex flex-col items-center text-center"
       style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
     >
       {/* Stacked doc illustration */}
@@ -641,32 +635,21 @@ function EmptyState({
         <span style={{ position: "absolute", top: 10, left: 0, fontSize: 8, color: "#FFC700", opacity: 0.4 }}>✦</span>
       </div>
 
-      <h3 className="text-[15.5px] font-semibold text-gray-800 tracking-tight mb-2">
+      <h3 className="text-[15px] font-semibold text-gray-800 tracking-tight mb-1.5">
         {isNoResults ? "No PDFs found" : "Select filters to find reports"}
       </h3>
-      <p className="text-sm text-gray-400 leading-relaxed max-w-xs mb-6">
+      <p className="text-sm text-gray-400 leading-relaxed max-w-xs">
         {isNoResults
-          ? "No PDFs match your current filters. Try adjusting your selection or search query."
-          : "Choose your batch and test date above to view your available result PDFs."}
+          ? "No PDFs match your current filters. Try adjusting your selection or search."
+          : "Choose your batch and test date above to view available result PDFs."}
       </p>
-
-      {!isNoResults && onShowAll && (
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.97 }}
-          onClick={onShowAll}
-          className="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors"
-        >
-          Show all PDFs
-        </motion.button>
-      )}
     </motion.div>
   );
 }
 
 function LoadingScreen() {
   return (
-    <div className="min-h-screen bg-[#F7F8FA] flex items-center justify-center">
+    <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center">
       <div className="text-center">
         <div className="w-9 h-9 rounded-full border-[2.5px] border-gray-200 border-t-[#FFC700] mx-auto mb-4"
           style={{ animation: "spin 0.75s linear infinite" }} />
@@ -678,7 +661,7 @@ function LoadingScreen() {
 
 function ErrorScreen({ message }: { message: string }) {
   return (
-    <div className="min-h-screen bg-[#F7F8FA] flex items-center justify-center px-6">
+    <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center px-6">
       <div className="text-center max-w-sm">
         <div className="w-14 h-14 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center mx-auto mb-5">
           <svg className="w-6 h-6 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
