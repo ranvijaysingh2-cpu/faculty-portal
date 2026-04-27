@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { signOut } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { PdfRecord } from "@/lib/csv";
@@ -473,7 +473,7 @@ function SidebarItem({
   );
 }
 
-// ── Filter select ──────────────────────────────────────────────────────────
+// ── Custom dropdown (fixed-position — not clipped by overflow containers) ──
 
 function FilterSelect({
   label, options, value, onChange, disabled, active,
@@ -481,39 +481,113 @@ function FilterSelect({
   label: string; options: string[]; value: string;
   onChange: (v: string) => void; disabled: boolean; active: boolean;
 }) {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  function openDropdown() {
+    if (disabled || !btnRef.current) return;
+    const r = btnRef.current.getBoundingClientRect();
+    setPos({ top: r.bottom + 4, left: r.left, width: r.width });
+    setOpen(true);
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    function onDown(e: MouseEvent) {
+      if (!btnRef.current?.contains(e.target as Node) &&
+          !listRef.current?.contains(e.target as Node)) setOpen(false);
+    }
+    function onClose() { setOpen(false); }
+    document.addEventListener("mousedown", onDown);
+    window.addEventListener("scroll", onClose, true);
+    window.addEventListener("resize", onClose);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      window.removeEventListener("scroll", onClose, true);
+      window.removeEventListener("resize", onClose);
+    };
+  }, [open]);
+
   return (
-    <div className="relative">
-      <select
-        value={value}
+    <div>
+      <button
+        ref={btnRef}
+        type="button"
         disabled={disabled}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full h-12 appearance-none pl-4 pr-9 text-sm text-zinc-700 bg-zinc-50 border rounded-2xl outline-none transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+        onClick={() => open ? setOpen(false) : openDropdown()}
+        className="w-full h-12 flex items-center justify-between pl-4 pr-3 text-sm rounded-2xl border transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         style={{
-          borderColor: active ? "#FFC700" : "#e4e4e7",
-          boxShadow: active ? "0 0 0 3px rgba(255,199,0,0.12)" : "none",
-        }}
-        onFocus={(e) => {
-          if (!disabled) {
-            e.currentTarget.style.borderColor = "#FFC700";
-            e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,199,0,0.12)";
-            e.currentTarget.style.background = "#fff";
-          }
-        }}
-        onBlur={(e) => {
-          if (!active) {
-            e.currentTarget.style.borderColor = "#e4e4e7";
-            e.currentTarget.style.boxShadow = "none";
-            e.currentTarget.style.background = "";
-          }
+          borderColor: open || active ? "#FFC700" : "#e4e4e7",
+          boxShadow: open || active ? "0 0 0 3px rgba(255,199,0,0.12)" : "none",
+          background: open ? "#fff" : "#fafafa",
+          color: value ? "#3f3f46" : "#a1a1aa",
         }}
       >
-        <option value="">— {label} —</option>
-        {options.map((o) => <option key={o} value={o}>{o}</option>)}
-      </select>
-      <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none"
-        viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="6 9 12 15 18 9" />
-      </svg>
+        <span className="truncate text-left">{value || `— ${label} —`}</span>
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.15 }}
+          className="shrink-0 ml-2"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </motion.span>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            ref={listRef}
+            key="dd"
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            transition={{ duration: 0.12, ease: [0.16, 1, 0.3, 1] as const }}
+            style={{
+              position: "fixed",
+              top: pos.top,
+              left: pos.left,
+              width: pos.width,
+              zIndex: 9999,
+              background: "#fff",
+              border: "1px solid #e4e4e7",
+              borderRadius: 16,
+              boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)",
+              overflow: "hidden",
+            }}
+          >
+            <div className="max-h-52 overflow-y-auto py-1">
+              <button type="button"
+                onClick={() => { onChange(""); setOpen(false); }}
+                className="w-full text-left px-4 py-2.5 text-sm text-zinc-400 hover:bg-zinc-50 transition-colors">
+                — {label} —
+              </button>
+              {options.map((o) => (
+                <button key={o} type="button"
+                  onClick={() => { onChange(o); setOpen(false); }}
+                  className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between transition-colors ${
+                    o === value
+                      ? "bg-yellow-50 text-zinc-900 font-semibold"
+                      : "text-zinc-700 hover:bg-zinc-50"
+                  }`}
+                >
+                  <span className="truncate">{o}</span>
+                  {o === value && (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#EAB308"
+                      strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" className="shrink-0 ml-2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

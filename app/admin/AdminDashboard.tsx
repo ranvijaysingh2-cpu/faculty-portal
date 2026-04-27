@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 
-// ── Types ────────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface InactiveUser { email: string; role: string; scope: string; lastSeen: string | null }
 interface Stats {
@@ -46,7 +47,7 @@ function useIsMobile() {
   return mobile;
 }
 
-// ── Chart tooltip ─────────────────────────────────────────────────────────────
+// ── Tooltip ────────────────────────────────────────────────────────────────────
 
 function LightTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
@@ -62,9 +63,10 @@ function LightTooltip({ active, payload, label }: any) {
   );
 }
 
-// ── Main Component ────────────────────────────────────────────────────────────
+// ── Main component ─────────────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +79,12 @@ export default function AdminDashboard() {
   const [building, setBuilding] = useState(false);
   const [builtOk, setBuiltOk] = useState(false);
   const isMobile = useIsMobile();
-  const REFRESH_MS = 10 * 60 * 1000;
+
+  useEffect(() => {
+    const onResize = () => { if (window.innerWidth >= 1024) setSidebarOpen(false); };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const fetchStats = useCallback(() => {
     fetch("/api/admin/stats")
@@ -89,7 +96,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchStats();
-    const iv = setInterval(fetchStats, REFRESH_MS);
+    const iv = setInterval(fetchStats, 10 * 60 * 1000);
     return () => clearInterval(iv);
   }, [fetchStats]);
 
@@ -160,225 +167,318 @@ export default function AdminDashboard() {
 
   const { users, activity } = stats;
   const inactivePct = users.total > 0 ? Math.round((users.inactive.length / users.total) * 100) : 0;
+  const pdfEvents = activity.recentEvents.filter((e) => e.event_type === "pdf_open");
+
+  const sidebar = (
+    <AdminSidebar onClose={() => setSidebarOpen(false)} />
+  );
 
   return (
-    <div style={{ minHeight: "100vh", background: "#FAFAF8", fontFamily: "-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif" }}>
+    <div className="h-screen flex bg-[#fafaf8] text-zinc-900 overflow-hidden">
 
-      {/* Grain */}
-      <div style={{ pointerEvents: "none", position: "fixed", inset: 0, zIndex: 0, opacity: 0.035,
-        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-        backgroundSize: "180px 180px" }} />
+      {/* Desktop sidebar */}
+      <aside className="hidden lg:flex w-[250px] shrink-0 border-r border-zinc-200 bg-white flex-col">
+        {sidebar}
+      </aside>
 
-      {/* ── Header ── */}
-      <header style={{ background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.07)", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-        <div style={{ maxWidth: 1300, margin: "0 auto", padding: "0 20px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-            <div style={{ width: 30, height: 30, borderRadius: 8, background: Y, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(255,199,0,0.3)" }}>
-              <span style={{ fontWeight: 900, fontSize: 10, color: "#000" }}>PW</span>
-            </div>
-            {!isMobile && <span style={{ color: "#111", fontWeight: 700, fontSize: 15, letterSpacing: -0.3 }}>Admin Dashboard</span>}
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
-            {revalidatedAt && !isMobile && (
-              <span style={{ color: "rgba(0,0,0,0.3)", fontSize: 11 }}>Refreshed {revalidatedAt}</span>
-            )}
-            <LightBtn onClick={buildMasterMap} disabled={building}>
-              {building ? "⟳" : builtOk ? "✅" : "🗺️"}
-              {!isMobile && (building ? " Building…" : builtOk ? " Built!" : " Build Map")}
-            </LightBtn>
-            <LightBtn onClick={handleRevalidate} disabled={revalidating} yellow>
-              {revalidating ? "⟳" : "⚡"}
-              {!isMobile && (revalidating ? " Refreshing…" : " Refresh Now")}
-            </LightBtn>
-            <a href="/" style={{ color: "rgba(0,0,0,0.4)", fontSize: 12, textDecoration: "none", padding: "6px 10px" }}>← Portal</a>
-          </div>
-        </div>
-      </header>
+      {/* Mobile overlay */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div key="overlay"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
+            onClick={() => setSidebarOpen(false)} />
+        )}
+      </AnimatePresence>
 
-      <main style={{ maxWidth: 1300, margin: "0 auto", padding: isMobile ? "16px 12px 60px" : "28px 24px 80px", position: "relative", zIndex: 1 }}>
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.aside key="drawer"
+            initial={{ x: -260 }} animate={{ x: 0 }} exit={{ x: -260 }}
+            transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] as const }}
+            className="fixed inset-y-0 left-0 z-50 w-[250px] bg-white border-r border-zinc-200 flex flex-col lg:hidden">
+            {sidebar}
+          </motion.aside>
+        )}
+      </AnimatePresence>
 
-        {/* ── KPI Grid ── */}
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(3, 1fr)", gap: 12, marginBottom: 24 }}>
-          <KpiCard label="Total Users" value={users.total} icon="👥" accent="#3B82F6" />
-          <KpiCard label="Active This Week" value={users.activeThisWeek} sub={`${Math.round((users.activeThisWeek / (users.total || 1)) * 100)}%`} icon="✅" accent="#10B981" />
-          <KpiCard label="Inactive This Week" value={users.inactive.length} sub={`${inactivePct}% of total`} icon="⚠️" accent="#EF4444" />
-          <KpiCard label="Active This Month" value={users.activeThisMonth} icon="📅" accent="#8B5CF6" />
-          <KpiCard label="Portal Opens" value={activity.totalPortalOpens} sub="all time" icon="🚪" accent="#6366F1" />
-          <KpiCard label="PDF Opens" value={activity.totalPdfOpens} sub="all time" icon="📄" accent={Y} />
-        </div>
+      {/* Main area */}
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
-        {/* ── Daily Active ── */}
-        <ChartCard title="Daily Active Users — Last 30 Days">
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={activity.dailyActive} margin={{ top: 5, right: 16, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
-              <XAxis dataKey="date" tick={TICK} tickFormatter={(v) => v.slice(5)} interval={isMobile ? 6 : 3} axisLine={false} tickLine={false} />
-              <YAxis tick={TICK} allowDecimals={false} width={28} axisLine={false} tickLine={false} />
-              <Tooltip content={<LightTooltip />} />
-              <Line type="monotone" dataKey="count" stroke={Y} strokeWidth={2.5} dot={false} name="Active Users" />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartCard>
-
-        {/* ── Region + Center ── */}
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 16 }}>
-          <ChartCard title="PDF Opens by Region">
-            {activity.byRegion.length === 0 ? <ChartEmpty /> : (
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={activity.byRegion} margin={{ top: 5, right: 16, left: 0, bottom: 30 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
-                  <XAxis dataKey="region" tick={TICK} angle={-20} textAnchor="end" axisLine={false} tickLine={false} />
-                  <YAxis tick={TICK} allowDecimals={false} width={28} axisLine={false} tickLine={false} />
-                  <Tooltip content={<LightTooltip />} />
-                  <Bar dataKey="opens" fill={Y} radius={[4, 4, 0, 0]} name="Opens" />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </ChartCard>
-
-          <ChartCard title="PDF Opens by Center (Top 10)">
-            {activity.byCenter.length === 0 ? <ChartEmpty /> : (
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={activity.byCenter} layout="vertical" margin={{ top: 5, right: 16, left: 4, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
-                  <XAxis type="number" tick={TICK} allowDecimals={false} axisLine={false} tickLine={false} />
-                  <YAxis type="category" dataKey="center" tick={TICK} width={isMobile ? 90 : 140}
-                    tickFormatter={(v) => v.length > (isMobile ? 13 : 22) ? v.slice(0, isMobile ? 11 : 20) + "…" : v}
-                    axisLine={false} tickLine={false} />
-                  <Tooltip content={<LightTooltip />} />
-                  <Bar dataKey="opens" fill="#4ECDC4" radius={[0, 4, 4, 0]} name="Opens" />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </ChartCard>
-        </div>
-
-        {/* ── Batch + Hour ── */}
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 16 }}>
-          <ChartCard title="PDF Opens by Batch (Top 10)">
-            {activity.byBatch.length === 0 ? <ChartEmpty /> : (
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={activity.byBatch} layout="vertical" margin={{ top: 5, right: 16, left: 4, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
-                  <XAxis type="number" tick={TICK} allowDecimals={false} axisLine={false} tickLine={false} />
-                  <YAxis type="category" dataKey="batch" tick={TICK} width={isMobile ? 90 : 130}
-                    tickFormatter={(v) => v.length > (isMobile ? 13 : 20) ? v.slice(0, isMobile ? 11 : 18) + "…" : v}
-                    axisLine={false} tickLine={false} />
-                  <Tooltip content={<LightTooltip />} />
-                  <Bar dataKey="opens" fill="#FF6B35" radius={[0, 4, 4, 0]} name="Opens" />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </ChartCard>
-
-          <ChartCard title="Activity by Hour of Day">
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={activity.byHour} margin={{ top: 5, right: 16, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
-                <XAxis dataKey="hour" tick={TICK} interval={isMobile ? 5 : 2} axisLine={false} tickLine={false} />
-                <YAxis tick={TICK} allowDecimals={false} width={28} axisLine={false} tickLine={false} />
-                <Tooltip content={<LightTooltip />} />
-                <Bar dataKey="count" fill="#8B5CF6" radius={[4, 4, 0, 0]} name="Events" />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
-        </div>
-
-        {/* ── Inactive Users ── */}
-        <div style={card.box}>
-          <div style={{ display: "flex", flexWrap: "wrap" as const, alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 18 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <h2 style={card.title}>Inactive This Week</h2>
-              <span style={badge.red}>{users.inactive.length}</span>
-            </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
-              <LightBtn onClick={() => setReportModal(true)}>{isMobile ? "📋" : "📋 Preview"}</LightBtn>
-              <LightBtn onClick={sendReport} disabled={sending}>{sending ? "…" : sentOk ? "✅" : isMobile ? "📧" : "📧 Send Reports"}</LightBtn>
-              <LightBtn onClick={copyEmails}>{copied ? "✅" : isMobile ? "Copy" : "Copy Emails"}</LightBtn>
-              <LightBtn onClick={exportCSV}>{isMobile ? "CSV" : "Export CSV"}</LightBtn>
+        {/* Header */}
+        <header className="h-16 shrink-0 border-b border-zinc-200 bg-white px-5 lg:px-6 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <button onClick={() => setSidebarOpen(true)}
+              className="lg:hidden w-9 h-9 rounded-xl flex items-center justify-center text-zinc-600 hover:bg-zinc-100 transition-colors cursor-pointer shrink-0">
+              <MenuIcon />
+            </button>
+            <div className="min-w-0">
+              <h1 className="text-base font-bold leading-tight">Admin Dashboard</h1>
+              {revalidatedAt && (
+                <p className="text-[11px] text-zinc-400 mt-0.5">Refreshed {revalidatedAt}</p>
+              )}
             </div>
           </div>
 
-          {users.inactive.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "32px 0" }}>
-              <span style={{ fontSize: 32 }}>🎉</span>
-              <p style={{ marginTop: 10, color: "#10B981", fontWeight: 600, fontSize: 14 }}>All users active this week!</p>
+          <div className="flex items-center gap-2 shrink-0">
+            <AdminBtn onClick={buildMasterMap} disabled={building}>
+              {building ? "Building…" : builtOk ? "✓ Built!" : "Build Map"}
+            </AdminBtn>
+            <AdminBtn onClick={handleRevalidate} disabled={revalidating} yellow>
+              {revalidating ? "Refreshing…" : "⚡ Refresh"}
+            </AdminBtn>
+          </div>
+        </header>
+
+        {/* Scrollable content */}
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+          <div className="max-w-5xl mx-auto space-y-4">
+
+            {/* KPI grid */}
+            <section id="kpi" className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+              <KpiCard label="Total Users"        value={users.total}             sub={`${users.byRole.faculty}F · ${users.byRole.center_head}CH · ${users.byRole.region_head}RH`} accent="#3B82F6" />
+              <KpiCard label="Active This Week"   value={users.activeThisWeek}    sub={`${Math.round((users.activeThisWeek / (users.total || 1)) * 100)}% of total`} accent="#10B981" />
+              <KpiCard label="Inactive This Week" value={users.inactive.length}   sub={`${inactivePct}% of total`} accent="#EF4444" />
+              <KpiCard label="Active This Month"  value={users.activeThisMonth}   sub="" accent="#8B5CF6" />
+              <KpiCard label="Portal Opens"       value={activity.totalPortalOpens} sub="all time" accent="#6366F1" />
+              <KpiCard label="PDF Opens"          value={activity.totalPdfOpens}  sub="all time" accent={Y} />
+            </section>
+
+            {/* Daily active */}
+            <section id="charts">
+              <ChartCard title="Daily Active Users — Last 30 Days">
+                <ResponsiveContainer width="100%" height={200}>
+                  <LineChart data={activity.dailyActive} margin={{ top: 5, right: 16, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
+                    <XAxis dataKey="date" tick={TICK} tickFormatter={(v) => v.slice(5)} interval={isMobile ? 6 : 3} axisLine={false} tickLine={false} />
+                    <YAxis tick={TICK} allowDecimals={false} width={28} axisLine={false} tickLine={false} />
+                    <Tooltip content={<LightTooltip />} />
+                    <Line type="monotone" dataKey="count" stroke={Y} strokeWidth={2.5} dot={false} name="Active Users" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            </section>
+
+            {/* Region + Center */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <ChartCard title="PDF Opens by Region">
+                {activity.byRegion.length === 0 ? <ChartEmpty /> : (
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={activity.byRegion} margin={{ top: 5, right: 16, left: 0, bottom: 30 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
+                      <XAxis dataKey="region" tick={TICK} angle={-20} textAnchor="end" axisLine={false} tickLine={false} />
+                      <YAxis tick={TICK} allowDecimals={false} width={28} axisLine={false} tickLine={false} />
+                      <Tooltip content={<LightTooltip />} />
+                      <Bar dataKey="opens" fill={Y} radius={[4, 4, 0, 0]} name="Opens" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </ChartCard>
+
+              <ChartCard title="PDF Opens by Center (Top 10)">
+                {activity.byCenter.length === 0 ? <ChartEmpty /> : (
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={activity.byCenter} layout="vertical" margin={{ top: 5, right: 16, left: 4, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
+                      <XAxis type="number" tick={TICK} allowDecimals={false} axisLine={false} tickLine={false} />
+                      <YAxis type="category" dataKey="center" tick={TICK} width={isMobile ? 90 : 140}
+                        tickFormatter={(v) => v.length > (isMobile ? 13 : 22) ? v.slice(0, isMobile ? 11 : 20) + "…" : v}
+                        axisLine={false} tickLine={false} />
+                      <Tooltip content={<LightTooltip />} />
+                      <Bar dataKey="opens" fill="#4ECDC4" radius={[0, 4, 4, 0]} name="Opens" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </ChartCard>
             </div>
-          ) : (
-            <div style={{ overflowX: "auto", borderRadius: 10, border: "1px solid rgba(0,0,0,0.07)" }}>
-              <table style={tbl.table}>
-                <thead>
-                  <tr style={{ background: "rgba(0,0,0,0.02)" }}>
-                    {["Name", "Email", "Batch", "Center", "Region", "Last Seen"].map((h) => (
-                      <th key={h} style={tbl.th}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.inactive.map((u: any, i: number) => (
-                    <tr key={i} style={{ background: i % 2 === 0 ? "transparent" : "rgba(0,0,0,0.015)" }}>
-                      <td style={tbl.td}>{u.name || u.email.split("@")[0]}</td>
-                      <td style={{ ...tbl.td, color: "rgba(0,0,0,0.4)", fontSize: 12 }}>{u.email}</td>
-                      <td style={tbl.td}>{u.batch || u.scope || "—"}</td>
-                      <td style={tbl.td}>{u.center || "—"}</td>
-                      <td style={tbl.td}>{u.region || "—"}</td>
-                      <td style={{ ...tbl.td, color: u.lastSeen ? "rgba(0,0,0,0.45)" : "#EF4444", fontWeight: u.lastSeen ? 400 : 600 }}>
-                        {u.lastSeen ? new Date(u.lastSeen).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "Never opened"}
-                      </td>
+
+            {/* Batch + Hour */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <ChartCard title="PDF Opens by Batch (Top 10)">
+                {activity.byBatch.length === 0 ? <ChartEmpty /> : (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={activity.byBatch} layout="vertical" margin={{ top: 5, right: 16, left: 4, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
+                      <XAxis type="number" tick={TICK} allowDecimals={false} axisLine={false} tickLine={false} />
+                      <YAxis type="category" dataKey="batch" tick={TICK} width={isMobile ? 90 : 130}
+                        tickFormatter={(v) => v.length > (isMobile ? 13 : 20) ? v.slice(0, isMobile ? 11 : 18) + "…" : v}
+                        axisLine={false} tickLine={false} />
+                      <Tooltip content={<LightTooltip />} />
+                      <Bar dataKey="opens" fill="#FF6B35" radius={[0, 4, 4, 0]} name="Opens" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </ChartCard>
+
+              <ChartCard title="Activity by Hour of Day">
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={activity.byHour} margin={{ top: 5, right: 16, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
+                    <XAxis dataKey="hour" tick={TICK} interval={isMobile ? 5 : 2} axisLine={false} tickLine={false} />
+                    <YAxis tick={TICK} allowDecimals={false} width={28} axisLine={false} tickLine={false} />
+                    <Tooltip content={<LightTooltip />} />
+                    <Bar dataKey="count" fill="#8B5CF6" radius={[4, 4, 0, 0]} name="Events" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            </div>
+
+            {/* Inactive users — summary + actions only (no table) */}
+            <section id="users" className="bg-white border border-zinc-100 rounded-[24px] p-5 lg:p-6"
+              style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+              <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+                <div>
+                  <h2 className="text-sm font-bold text-zinc-900 mb-1">Inactive This Week</h2>
+                  <div className="flex items-center gap-2">
+                    <span className="text-3xl font-black text-zinc-900">{users.inactive.length}</span>
+                    <span className="text-sm text-zinc-400 font-medium">users · {inactivePct}% of total</span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <AdminBtn onClick={() => setReportModal(true)}>Preview Report</AdminBtn>
+                  <AdminBtn onClick={sendReport} disabled={sending}>
+                    {sending ? "Sending…" : sentOk ? "✓ Sent!" : "Send Reports"}
+                  </AdminBtn>
+                  <AdminBtn onClick={copyEmails}>{copied ? "✓ Copied!" : "Copy Emails"}</AdminBtn>
+                  <AdminBtn onClick={exportCSV}>Export CSV</AdminBtn>
+                </div>
+              </div>
+
+              {users.inactive.length === 0 ? (
+                <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-green-50 border border-green-100">
+                  <span className="text-green-500 font-bold text-sm">All users active this week!</span>
+                </div>
+              ) : (
+                <div className="px-4 py-3 rounded-2xl bg-zinc-50 border border-zinc-100">
+                  <p className="text-sm text-zinc-600">
+                    <span className="font-semibold text-zinc-900">{users.inactive.length} users</span> haven&apos;t accessed the portal this week.
+                    Use <span className="font-semibold">Copy Emails</span> or <span className="font-semibold">Export CSV</span> to follow up.
+                  </p>
+                </div>
+              )}
+            </section>
+
+            {/* Recent PDF activity (portal_open events filtered out) */}
+            <section id="activity" className="bg-white border border-zinc-100 rounded-[24px] p-5 lg:p-6"
+              style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+              <h2 className="text-sm font-bold text-zinc-900 mb-4">Recent PDF Activity</h2>
+
+              <div className="overflow-x-auto rounded-2xl border border-zinc-100">
+                <table className="w-full text-[13px] border-collapse">
+                  <thead>
+                    <tr className="bg-zinc-50">
+                      {["Time", "Email", "PDF", "Batch"].map((h) => (
+                        <th key={h} className="text-left px-4 py-3 text-[10px] font-bold text-zinc-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                  </thead>
+                  <tbody>
+                    {pdfEvents.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="text-center py-10 text-zinc-300 text-sm">No PDF opens yet</td>
+                      </tr>
+                    ) : pdfEvents.map((e, i) => (
+                      <tr key={i} className={i % 2 === 0 ? "" : "bg-zinc-50/60"}>
+                        <td className="px-4 py-3 text-zinc-400 text-[11px] whitespace-nowrap">
+                          {new Date(e.timestamp).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                        </td>
+                        <td className="px-4 py-3 text-zinc-600 text-[12px]">{e.email}</td>
+                        <td className="px-4 py-3 text-zinc-700 font-medium max-w-[220px] truncate">
+                          {e.pdf_name ?? "—"}
+                        </td>
+                        <td className="px-4 py-3 text-zinc-500 text-[12px]">{e.batch ?? "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
 
-        {/* ── Recent Activity ── */}
-        <div style={card.box}>
-          <h2 style={{ ...card.title, marginBottom: 16 }}>Recent Activity</h2>
-          <div style={{ overflowX: "auto", borderRadius: 10, border: "1px solid rgba(0,0,0,0.07)" }}>
-            <table style={tbl.table}>
-              <thead>
-                <tr style={{ background: "rgba(0,0,0,0.02)" }}>
-                  {["Time", "Email", "Event", "Details"].map((h) => (
-                    <th key={h} style={tbl.th}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {activity.recentEvents.length === 0 ? (
-                  <tr><td colSpan={4} style={{ ...tbl.td, textAlign: "center", color: "rgba(0,0,0,0.25)", padding: "32px 0" }}>No activity yet</td></tr>
-                ) : activity.recentEvents.map((e, i) => (
-                  <tr key={i} style={{ background: i % 2 === 0 ? "transparent" : "rgba(0,0,0,0.015)" }}>
-                    <td style={{ ...tbl.td, color: "rgba(0,0,0,0.35)", fontSize: 11, whiteSpace: "nowrap" as const }}>
-                      {new Date(e.timestamp).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                    </td>
-                    <td style={{ ...tbl.td, fontSize: 12 }}>{e.email}</td>
-                    <td style={tbl.td}>
-                      {e.event_type === "pdf_open"
-                        ? <span style={badge.yellow}>📄 PDF</span>
-                        : <span style={badge.blue}>🚪 Login</span>}
-                    </td>
-                    <td style={{ ...tbl.td, fontSize: 12, color: "rgba(0,0,0,0.45)" }}>
-                      {e.pdf_name ? `${e.pdf_name}${e.batch ? ` · ${e.batch}` : ""}` : e.region ?? "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <p className="text-center text-[11px] text-zinc-300 pb-2">
+              Auto-refreshes every 10 min · Last loaded: {new Date(stats.lastSync).toLocaleTimeString()}
+            </p>
+
           </div>
-        </div>
+        </main>
+      </div>
 
-        <p style={{ textAlign: "center", fontSize: 11, color: "rgba(0,0,0,0.25)", marginTop: 8 }}>
-          Auto-refreshes every 10 min · Last loaded: {new Date(stats.lastSync).toLocaleTimeString()}
-        </p>
-      </main>
-
-      {/* ── Report Modal ── */}
+      {/* Report Modal */}
       {reportModal && (
-        <ReportModal stats={stats} onClose={() => setReportModal(false)} onSend={sendReport} sending={sending} sentOk={sentOk} />
+        <ReportModal stats={stats} onClose={() => setReportModal(false)}
+          onSend={sendReport} sending={sending} sentOk={sentOk} />
       )}
     </div>
+  );
+}
+
+// ── Sidebar ────────────────────────────────────────────────────────────────────
+
+function AdminSidebar({ onClose }: { onClose: () => void }) {
+  return (
+    <>
+      {/* Brand */}
+      <div className="flex items-center gap-3 px-5 pt-5 pb-5 border-b border-zinc-100 shrink-0">
+        <div className="w-10 h-10 rounded-2xl bg-yellow-400 text-black font-black text-sm flex items-center justify-center shrink-0">
+          PW
+        </div>
+        <div>
+          <h2 className="font-semibold text-sm leading-tight">PW Darpan</h2>
+          <p className="text-[11px] text-zinc-500">Admin Panel</p>
+        </div>
+      </div>
+
+      {/* Nav */}
+      <nav className="mt-4 px-3 space-y-1 shrink-0">
+        <AdminNavItem icon={<OverviewIcon />} label="Overview"
+          onClick={() => { document.getElementById("kpi")?.scrollIntoView({ behavior: "smooth" }); onClose(); }} active />
+        <AdminNavItem icon={<ChartIcon />} label="Activity"
+          onClick={() => { document.getElementById("charts")?.scrollIntoView({ behavior: "smooth" }); onClose(); }} />
+        <AdminNavItem icon={<UsersIcon />} label="Users"
+          onClick={() => { document.getElementById("users")?.scrollIntoView({ behavior: "smooth" }); onClose(); }} />
+        <AdminNavItem icon={<ReportsIcon />} label="PDF Activity"
+          onClick={() => { document.getElementById("activity")?.scrollIntoView({ behavior: "smooth" }); onClose(); }} />
+      </nav>
+
+      {/* Support */}
+      <div className="mt-5 pt-4 border-t border-zinc-100 px-3 space-y-1 shrink-0">
+        <a href="/"
+          className="w-full h-11 rounded-2xl flex items-center gap-3 px-4 text-sm font-medium text-zinc-600 hover:bg-zinc-100 transition-colors cursor-pointer">
+          <BackIcon />
+          <span>Back to Portal</span>
+        </a>
+      </div>
+
+      {/* Admin badge */}
+      <div className="mt-auto pt-4 border-t border-zinc-100 px-3 pb-4 shrink-0">
+        <div className="rounded-2xl bg-yellow-50 border border-yellow-100 p-3 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-yellow-400 text-black flex items-center justify-center font-black text-sm shrink-0">
+            A
+          </div>
+          <div>
+            <p className="text-sm font-semibold">Admin</p>
+            <p className="text-xs text-zinc-500">Full access</p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function AdminNavItem({ icon, label, active, onClick }: {
+  icon: React.ReactNode; label: string; active?: boolean; onClick?: () => void;
+}) {
+  return (
+    <button type="button" onClick={onClick}
+      className={`w-full h-11 rounded-2xl flex items-center gap-3 px-4 text-sm transition-colors cursor-pointer ${
+        active
+          ? "bg-yellow-50 border border-yellow-200 text-zinc-900 font-semibold"
+          : "text-zinc-600 hover:bg-zinc-100 font-medium"
+      }`}>
+      <span className="shrink-0">{icon}</span>
+      <span>{label}</span>
+    </button>
   );
 }
 
@@ -426,80 +526,84 @@ function ReportModal({ stats, onClose, onSend, sending, sentOk }: {
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={onClose}>
-      <div style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.09)", borderRadius: 20, width: "100%", maxWidth: 600, maxHeight: "85vh", display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,0.2)" }} onClick={(e) => e.stopPropagation()}>
-        <div style={{ padding: "18px 22px", borderBottom: "1px solid rgba(0,0,0,0.07)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700, color: "#111" }}>📋 Weekly Report Preview</h2>
-          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: "rgba(0,0,0,0.3)", lineHeight: 1, padding: "0 4px" }}>×</button>
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(6px)" }}
+      onClick={onClose}>
+      <div className="bg-white border border-zinc-100 rounded-[24px] w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden"
+        style={{ boxShadow: "0 24px 80px rgba(0,0,0,0.2)" }}
+        onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 shrink-0">
+          <h2 className="text-sm font-bold text-zinc-900">Weekly Report Preview</h2>
+          <button onClick={onClose}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-400 hover:bg-zinc-100 transition-colors cursor-pointer text-lg leading-none">
+            ×
+          </button>
         </div>
-        <pre style={{ flex: 1, overflowY: "auto", padding: "18px 22px", fontSize: 12, lineHeight: 1.75, color: "rgba(0,0,0,0.6)", fontFamily: "monospace", margin: 0, whiteSpace: "pre-wrap", background: "rgba(0,0,0,0.02)" }}>{reportText}</pre>
-        <div style={{ padding: "14px 22px", borderTop: "1px solid rgba(0,0,0,0.07)", display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <LightBtn onClick={copyReport}>{copied ? "✅ Copied!" : "📋 Copy"}</LightBtn>
-          <LightBtn onClick={onSend} yellow disabled={sending}>{sending ? "Sending…" : sentOk ? "✅ Sent!" : "📧 Send All Reports"}</LightBtn>
+        <pre className="flex-1 overflow-y-auto px-6 py-4 text-[11.5px] leading-relaxed text-zinc-500 font-mono whitespace-pre-wrap bg-zinc-50/50">
+          {reportText}
+        </pre>
+        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-zinc-100 shrink-0">
+          <AdminBtn onClick={copyReport}>{copied ? "✓ Copied!" : "Copy"}</AdminBtn>
+          <AdminBtn onClick={onSend} yellow disabled={sending}>
+            {sending ? "Sending…" : sentOk ? "✓ Sent!" : "Send All Reports"}
+          </AdminBtn>
         </div>
       </div>
     </div>
   );
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// ── Sub-components ─────────────────────────────────────────────────────────────
 
-function KpiCard({ label, value, sub, icon, accent }: { label: string; value: string | number; sub?: string; icon: string; accent: string }) {
+function KpiCard({ label, value, sub, accent }: {
+  label: string; value: string | number; sub?: string; accent: string;
+}) {
   return (
-    <div style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.07)", borderTop: `3px solid ${accent}`, borderRadius: 16, padding: "16px 18px", marginBottom: 0, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-        <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, letterSpacing: 0.6 }}>{label}</span>
-        <span style={{ fontSize: 20 }}>{icon}</span>
-      </div>
-      <div style={{ fontSize: 28, fontWeight: 800, color: "#111", lineHeight: 1, letterSpacing: -1 }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: "rgba(0,0,0,0.3)", marginTop: 6 }}>{sub}</div>}
+    <div className="bg-white border border-zinc-100 rounded-[20px] p-4 lg:p-5"
+      style={{ borderTop: `3px solid ${accent}`, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+      <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide mb-2">{label}</div>
+      <div className="text-2xl lg:text-[28px] font-black text-zinc-900 leading-none" style={{ letterSpacing: -1 }}>{value}</div>
+      {sub && <div className="text-[11px] text-zinc-400 mt-1.5">{sub}</div>}
     </div>
   );
 }
 
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ ...card.box, marginBottom: 0 }}>
-      <h2 style={{ fontSize: 13, fontWeight: 700, color: "rgba(0,0,0,0.7)", marginBottom: 16, letterSpacing: -0.2 }}>{title}</h2>
+    <div className="bg-white border border-zinc-100 rounded-[24px] p-5 lg:p-6"
+      style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+      <h2 className="text-[13px] font-bold text-zinc-700 mb-4">{title}</h2>
       {children}
     </div>
   );
 }
 
-function LightBtn({ children, onClick, disabled, yellow }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean; yellow?: boolean }) {
+function AdminBtn({ children, onClick, disabled, yellow }: {
+  children: React.ReactNode; onClick?: () => void; disabled?: boolean; yellow?: boolean;
+}) {
   return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        background: yellow ? Y : "#F5F5F3",
-        color: yellow ? "#000" : "rgba(0,0,0,0.65)",
-        border: "1px solid " + (yellow ? Y : "rgba(0,0,0,0.1)"),
-        borderRadius: 8,
-        padding: "7px 14px",
-        fontWeight: 600,
-        fontSize: 12,
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.5 : 1,
-        whiteSpace: "nowrap" as const,
-        transition: "all 0.15s",
-      }}
-    >
+    <button onClick={onClick} disabled={disabled}
+      className={`h-9 px-4 rounded-xl text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap ${
+        yellow
+          ? "bg-yellow-400 text-black hover:bg-yellow-300"
+          : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
+      }`}>
       {children}
     </button>
   );
 }
 
 function ChartEmpty() {
-  return <div style={{ textAlign: "center", padding: "32px 0", color: "rgba(0,0,0,0.25)", fontSize: 13 }}>No data yet</div>;
+  return <div className="text-center py-8 text-zinc-300 text-sm">No data yet</div>;
 }
 
 function AdminSpinner() {
   return (
-    <div style={{ minHeight: "100vh", background: "#FAFAF8", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ textAlign: "center" }}>
-        <div style={{ width: 36, height: 36, border: "2.5px solid rgba(0,0,0,0.08)", borderTopColor: Y, borderRadius: "50%", animation: "spin 0.75s linear infinite", margin: "0 auto 16px" }} />
-        <p style={{ color: "rgba(0,0,0,0.35)", fontSize: 14 }}>Loading dashboard…</p>
+    <div className="h-screen bg-[#fafaf8] flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-9 h-9 rounded-full border-[2.5px] border-zinc-200 border-t-yellow-400 mx-auto mb-4"
+          style={{ animation: "spin 0.75s linear infinite" }} />
+        <p className="text-sm text-zinc-400">Loading dashboard…</p>
       </div>
     </div>
   );
@@ -507,38 +611,74 @@ function AdminSpinner() {
 
 function AdminError({ message }: { message: string }) {
   return (
-    <div style={{ minHeight: "100vh", background: "#FAFAF8", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-      <div style={{ textAlign: "center", maxWidth: 360 }}>
-        <div style={{ fontSize: 36, marginBottom: 14 }}>⚠️</div>
-        <h2 style={{ color: "#111", fontWeight: 700, marginBottom: 10 }}>Dashboard Error</h2>
-        <p style={{ color: "rgba(0,0,0,0.45)", fontSize: 14, lineHeight: 1.7 }}>{message}</p>
+    <div className="h-screen bg-[#fafaf8] flex items-center justify-center px-6">
+      <div className="text-center max-w-sm">
+        <div className="w-14 h-14 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center mx-auto mb-5">
+          <svg className="w-6 h-6 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+        </div>
+        <h2 className="text-xl font-bold text-zinc-900 mb-2">Dashboard Error</h2>
+        <p className="text-sm text-zinc-500 leading-relaxed">{message}</p>
       </div>
     </div>
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
+// ── Icons ──────────────────────────────────────────────────────────────────────
 
-const card = {
-  box: {
-    background: "#fff",
-    border: "1px solid rgba(0,0,0,0.07)",
-    borderRadius: 16,
-    padding: "20px 22px",
-    marginBottom: 16,
-    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-  } as React.CSSProperties,
-  title: { fontSize: 14, fontWeight: 700, color: "#111", letterSpacing: -0.2 } as React.CSSProperties,
-};
-
-const tbl = {
-  table: { width: "100%", borderCollapse: "collapse" as const, fontSize: 13 } as React.CSSProperties,
-  th: { textAlign: "left" as const, padding: "10px 14px", fontSize: 10, fontWeight: 700, color: "rgba(0,0,0,0.35)", textTransform: "uppercase" as const, letterSpacing: 0.6, whiteSpace: "nowrap" as const } as React.CSSProperties,
-  td: { padding: "11px 14px", borderBottom: "1px solid rgba(0,0,0,0.05)", color: "rgba(0,0,0,0.75)", verticalAlign: "middle" as const } as React.CSSProperties,
-};
-
-const badge = {
-  red: { background: "rgba(239,68,68,0.1)", color: "#dc2626", fontSize: 11, padding: "2px 10px", borderRadius: 20, fontWeight: 700, border: "1px solid rgba(239,68,68,0.2)" } as React.CSSProperties,
-  yellow: { background: "rgba(255,199,0,0.12)", color: "#92600A", fontSize: 11, padding: "2px 10px", borderRadius: 20, fontWeight: 600, border: "1px solid rgba(255,199,0,0.25)", whiteSpace: "nowrap" as const } as React.CSSProperties,
-  blue: { background: "rgba(99,102,241,0.1)", color: "#4f46e5", fontSize: 11, padding: "2px 10px", borderRadius: 20, fontWeight: 600, border: "1px solid rgba(99,102,241,0.2)", whiteSpace: "nowrap" as const } as React.CSSProperties,
-};
+function MenuIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+  );
+}
+function OverviewIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+      <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+    </svg>
+  );
+}
+function ChartIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" />
+      <line x1="6" y1="20" x2="6" y2="14" /><line x1="2" y1="20" x2="22" y2="20" />
+    </svg>
+  );
+}
+function UsersIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
+function ReportsIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="9" y1="13" x2="15" y2="13" /><line x1="9" y1="17" x2="13" y2="17" />
+    </svg>
+  );
+}
+function BackIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+    </svg>
+  );
+}

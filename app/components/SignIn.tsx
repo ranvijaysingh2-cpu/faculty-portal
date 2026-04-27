@@ -75,7 +75,7 @@ export default function SignIn({ error }: { error?: string }) {
       {/* ── Main ── */}
       <main className="relative z-10 flex-1 overflow-y-auto">
         {/* min-h-full + flex items-center → vertically centered on desktop, scrollable on mobile */}
-        <div className="min-h-full flex items-center px-6 md:px-14 py-8 lg:py-6">
+        <div className="min-h-full flex items-center px-6 md:px-14 py-3 lg:py-6">
           <div className="w-full max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
             {/* ── Left — Hero ── */}
@@ -83,7 +83,7 @@ export default function SignIn({ error }: { error?: string }) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] as const }}
-              className="order-2 lg:order-1"
+              className="hidden lg:flex flex-col order-2 lg:order-1"
             >
               <p className="uppercase tracking-[0.4em] text-xs text-yellow-500 font-semibold mb-5">
                 Performance Intelligence Platform
@@ -129,11 +129,11 @@ export default function SignIn({ error }: { error?: string }) {
               transition={{ duration: 0.75, delay: 0.15, ease: [0.16, 1, 0.3, 1] as const }}
               className="flex justify-center order-1 lg:order-2"
             >
-              <div className="w-full max-w-md bg-white/90 border border-white/60 shadow-2xl rounded-[30px] p-7 backdrop-blur-sm">
+              <div className="w-full max-w-md bg-white/90 border border-white/60 shadow-2xl rounded-[30px] p-5 sm:p-7 backdrop-blur-sm">
 
                 {/* Card header */}
                 <div className="text-center mb-6">
-                  <div className="w-14 h-14 rounded-3xl bg-yellow-400 text-black font-black text-lg mx-auto flex items-center justify-center shadow-lg mb-4">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-3xl bg-yellow-400 text-black font-black text-lg mx-auto flex items-center justify-center shadow-lg mb-3">
                     PW
                   </div>
                   <h2 className="text-2xl font-bold tracking-tight">Sign in to Darpan</h2>

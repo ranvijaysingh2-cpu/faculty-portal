@@ -39,7 +39,7 @@ export default function FeedbackPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#FAFAF8" }}>
+    <div className="h-screen flex flex-col overflow-hidden" style={{ background: "#FAFAF8" }}>
 
       {/* Grain */}
       <div className="pointer-events-none fixed inset-0 z-0"
@@ -65,7 +65,7 @@ export default function FeedbackPage() {
       </header>
 
       {/* Content */}
-      <main className="relative z-10 flex-1 flex items-start justify-center px-5 py-8">
+      <main className="relative z-10 flex-1 overflow-y-auto flex items-start justify-center px-5 py-6">
         <div className="w-full max-w-[480px]">
 
           {/* Heading */}
