@@ -1,19 +1,14 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { NextResponse } from "next/server";
+import { isAdmin } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
-
-function isAdmin(email: string) {
-  return (process.env.ADMIN_EMAILS ?? "")
-    .split(",").map((e) => e.trim().toLowerCase())
-    .includes(email.toLowerCase());
-}
 
 async function callAppsScript(action: string) {
   const url = process.env.ACTIVITY_LOG_URL;
   if (!url) return { error: "ACTIVITY_LOG_URL not set" };
-  const res  = await fetch(url, {
+  const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action, _secret: process.env.LOG_SECRET ?? "" }),

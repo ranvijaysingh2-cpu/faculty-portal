@@ -13,15 +13,17 @@
   }
 
   html {
+    height: 100%;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
-    background: #ffffff;
+    background: #fafaf8;
     color: #111111;
-    min-height: 100vh;
+    height: 100%;
+    overflow: hidden;
   }
 
   select option {
@@ -34,34 +36,8 @@
   to { transform: rotate(360deg); }
 }
 
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes shimmer {
-  0%   { background-position: -400px 0; }
-  100% { background-position: 400px 0; }
-}
-
-/* Legacy animation classes — still used by AdminDashboard */
-.animate-in {
-  animation: fadeInUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-.delay-1 { animation-delay: 0.07s; }
-.delay-2 { animation-delay: 0.14s; }
-.delay-3 { animation-delay: 0.21s; }
-.delay-4 { animation-delay: 0.28s; }
-
-.skeleton-line {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
-  background-size: 400px 100%;
-  animation: shimmer 1.6s infinite;
-  border-radius: 6px;
-}
-
-/* Clean scrollbar */
-::-webkit-scrollbar { width: 4px; }
+/* Thin scrollbar for content areas */
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }

@@ -35,7 +35,7 @@ export default function SignIn({ error }: { error?: string }) {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-[#fafaf8] text-zinc-900">
+    <div className="h-screen flex flex-col bg-[#fafaf8] text-zinc-900 overflow-hidden">
 
       {/* ── Background ── */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">

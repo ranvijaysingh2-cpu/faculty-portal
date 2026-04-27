@@ -2,14 +2,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { NextResponse } from "next/server";
 import { getMasterMap, getActivityLog } from "@/lib/csv";
+import { isAdmin } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
-
-function isAdmin(email: string) {
-  return (process.env.ADMIN_EMAILS ?? "")
-    .split(",").map((e) => e.trim().toLowerCase())
-    .includes(email.toLowerCase());
-}
 
 export async function GET() {
   let email: string;

@@ -50,7 +50,7 @@ const fadeUp = {
 
 const stagger = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.06 } },
+  show: { transition: { staggerChildren: 0.05 } },
 };
 
 // ── Main component ─────────────────────────────────────────────────────────
@@ -67,7 +67,6 @@ export default function PdfBrowser() {
   const [selBatch, setSelBatch] = useState("");
   const [selDate, setSelDate] = useState("");
 
-  // Close mobile drawer when resizing to desktop
   useEffect(() => {
     const onResize = () => { if (window.innerWidth >= 1024) setSidebarOpen(false); };
     window.addEventListener("resize", onResize);
@@ -193,8 +192,8 @@ export default function PdfBrowser() {
   return (
     <div className="h-screen flex bg-[#fafaf8] text-zinc-900 overflow-hidden">
 
-      {/* Desktop sidebar — always visible lg+ */}
-      <aside className="hidden lg:flex w-[250px] shrink-0 border-r border-zinc-200 bg-white flex-col">
+      {/* Desktop sidebar */}
+      <aside className="hidden lg:flex w-[240px] shrink-0 border-r border-zinc-200 bg-white flex-col">
         <SidebarContent {...sidebarProps} />
       </aside>
 
@@ -218,11 +217,11 @@ export default function PdfBrowser() {
         {sidebarOpen && (
           <motion.aside
             key="drawer"
-            initial={{ x: -260 }}
+            initial={{ x: -250 }}
             animate={{ x: 0 }}
-            exit={{ x: -260 }}
+            exit={{ x: -250 }}
             transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] as const }}
-            className="fixed inset-y-0 left-0 z-50 w-[250px] bg-white border-r border-zinc-200 flex flex-col lg:hidden"
+            className="fixed inset-y-0 left-0 z-50 w-[240px] bg-white border-r border-zinc-200 flex flex-col lg:hidden"
           >
             <SidebarContent {...sidebarProps} />
           </motion.aside>
@@ -233,29 +232,29 @@ export default function PdfBrowser() {
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
         {/* Header */}
-        <header className="h-16 shrink-0 border-b border-zinc-200 bg-white px-5 lg:px-6 flex items-center justify-between gap-4">
+        <header className="h-14 shrink-0 border-b border-zinc-200 bg-white px-4 lg:px-6 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => setSidebarOpen(true)}
               className="lg:hidden w-9 h-9 rounded-xl flex items-center justify-center text-zinc-600 hover:bg-zinc-100 transition-colors cursor-pointer shrink-0"
+              aria-label="Open menu"
             >
               <MenuIcon />
             </button>
             <div className="min-w-0">
-              <h1 className="text-base font-bold leading-tight">Reports Workspace</h1>
-              <p className="hidden sm:block text-[11px] text-zinc-500 mt-0.5">Find and open PDFs quickly</p>
+              <h1 className="text-sm font-bold leading-tight truncate">Reports Workspace</h1>
             </div>
           </div>
 
           {/* Search — desktop */}
           <div className="relative hidden md:block shrink-0">
-            <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400" />
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400" />
             <input
               type="text"
               placeholder="Search reports..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-64 h-10 rounded-xl border border-zinc-200 bg-zinc-50 pl-10 pr-4 text-sm text-zinc-800 placeholder-zinc-400 outline-none transition-all focus:bg-white focus:border-yellow-400 focus:w-72"
+              className="w-56 h-9 rounded-xl border border-zinc-200 bg-zinc-50 pl-9 pr-4 text-sm text-zinc-800 placeholder-zinc-400 outline-none transition-all focus:bg-white focus:border-yellow-400 focus:w-64"
               onFocus={(e) => (e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,199,0,0.12)")}
               onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
             />
@@ -263,34 +262,21 @@ export default function PdfBrowser() {
         </header>
 
         {/* Body */}
-        <main className="flex-1 overflow-hidden p-4 lg:p-6 flex flex-col gap-4">
-
-          {/* Welcome */}
-          <motion.section
-            variants={fadeUp} initial="hidden" animate="show"
-            className="rounded-[24px] bg-white border border-zinc-100 px-5 lg:px-6 py-4 lg:py-5 shrink-0"
-            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
-          >
-            <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-yellow-500 mb-1">
-              Report Access
-            </p>
-            <h2 className="text-xl lg:text-2xl font-black tracking-tight">
-              Hello, {firstName} 👋
-            </h2>
-            <p className="text-sm text-zinc-500 mt-1">
-              Select batch, test date and report type to load PDFs.
-            </p>
-          </motion.section>
+        <main className="flex-1 overflow-hidden p-3 lg:p-5 flex flex-col gap-3">
 
           {/* Filters */}
           <motion.section
             variants={fadeUp} initial="hidden" animate="show"
-            transition={{ delay: 0.08 }}
-            className="rounded-[24px] bg-white border border-zinc-100 px-5 lg:px-6 py-4 lg:py-5 shrink-0"
-            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
+            className="rounded-2xl bg-white border border-zinc-100 px-4 lg:px-5 py-3.5 shrink-0"
+            style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
           >
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-zinc-900">Browse Results</h3>
+            <div className="flex items-center justify-between mb-2.5">
+              <div className="flex items-center gap-2">
+                <h2 className="text-xs font-bold text-zinc-900 uppercase tracking-wide">Filters</h2>
+                {data.pdfs.length > 0 && (
+                  <span className="text-[10px] font-medium text-zinc-400">{data.pdfs.length} PDFs available</span>
+                )}
+              </div>
               {hasFilters && (
                 <button onClick={clearFilters}
                   className="text-xs font-semibold text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer">
@@ -299,7 +285,7 @@ export default function PdfBrowser() {
               )}
             </div>
 
-            <div className={`grid gap-3 ${
+            <div className={`grid gap-2.5 ${
               showRegion ? "grid-cols-2 lg:grid-cols-4"
               : showCenter ? "grid-cols-2 lg:grid-cols-3"
               : "grid-cols-2"
@@ -321,14 +307,14 @@ export default function PdfBrowser() {
             </div>
 
             {/* Search — mobile */}
-            <div className="md:hidden mt-3 relative">
-              <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400" />
+            <div className="md:hidden mt-2.5 relative">
+              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400" />
               <input
                 type="text"
                 placeholder="Search reports..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full h-11 rounded-xl border border-zinc-200 bg-zinc-50 pl-10 pr-4 text-sm text-zinc-800 placeholder-zinc-400 outline-none"
+                className="w-full h-10 rounded-xl border border-zinc-200 bg-zinc-50 pl-9 pr-4 text-sm text-zinc-800 placeholder-zinc-400 outline-none"
                 onFocus={(e) => { e.currentTarget.style.borderColor = "#FFC700"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,199,0,0.12)"; }}
                 onBlur={(e) => { e.currentTarget.style.borderColor = "#e4e4e7"; e.currentTarget.style.boxShadow = "none"; }}
               />
@@ -338,14 +324,14 @@ export default function PdfBrowser() {
           {/* Results */}
           <motion.section
             variants={fadeUp} initial="hidden" animate="show"
-            transition={{ delay: 0.14 }}
-            className="flex-1 rounded-[24px] bg-white border border-zinc-100 overflow-hidden flex flex-col"
-            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
+            transition={{ delay: 0.07 }}
+            className="flex-1 rounded-2xl bg-white border border-zinc-100 overflow-hidden flex flex-col min-h-0"
+            style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
           >
-            <div className="h-14 shrink-0 border-b border-zinc-100 px-5 lg:px-6 flex items-center justify-between">
-              <h3 className="text-sm font-bold">Available Reports</h3>
-              <span className="text-sm text-zinc-500">
-                {showResults ? `${visiblePdfs.length} result${visiblePdfs.length !== 1 ? "s" : ""}` : "—"}
+            <div className="h-11 shrink-0 border-b border-zinc-100 px-4 lg:px-5 flex items-center justify-between">
+              <h3 className="text-xs font-bold text-zinc-700 uppercase tracking-wide">Results</h3>
+              <span className="text-xs text-zinc-400">
+                {showResults ? `${visiblePdfs.length} PDF${visiblePdfs.length !== 1 ? "s" : ""}` : "—"}
               </span>
             </div>
 
@@ -359,7 +345,7 @@ export default function PdfBrowser() {
                   <motion.div
                     key="list"
                     variants={stagger} initial="hidden" animate="show"
-                    className="p-4 flex flex-col gap-2"
+                    className="p-3 flex flex-col gap-2"
                   >
                     {visiblePdfs.map((pdf, i) => (
                       <PdfRow key={i} pdf={pdf} onOpen={logPdfOpen} />
@@ -386,52 +372,58 @@ function SidebarContent({
   return (
     <>
       {/* Brand */}
-      <div className="flex items-center gap-3 px-5 pt-5 pb-5 border-b border-zinc-100 shrink-0">
-        <div className="w-10 h-10 rounded-2xl bg-yellow-400 text-black font-black text-sm flex items-center justify-center shrink-0">
+      <div className="flex items-center gap-3 px-4 pt-5 pb-4 border-b border-zinc-100 shrink-0">
+        <div className="w-9 h-9 rounded-xl bg-yellow-400 text-black font-black text-xs flex items-center justify-center shrink-0">
           PW
         </div>
         <div>
           <h2 className="font-semibold text-sm leading-tight">PW Darpan</h2>
-          <p className="text-[11px] text-zinc-500">Workspace</p>
+          <p className="text-[10px] text-zinc-500">Workspace</p>
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="mt-4 px-3 space-y-1 shrink-0">
+      <nav className="mt-3 px-3 space-y-1 shrink-0">
         <SidebarItem icon={<ReportsIcon />} label="Reports" active onClick={onClose} />
-        <SidebarItem icon={<RecentIcon />}  label="Recent"      onClick={onClose} />
-        <SidebarItem icon={<StarIcon />}    label="Saved Views" onClick={onClose} />
-        <SidebarItem icon={<DownloadIcon />} label="Downloads"  onClick={onClose} />
       </nav>
 
       {/* Support */}
-      <div className="mt-5 pt-4 border-t border-zinc-100 px-3 space-y-1 shrink-0">
+      <div className="mt-3 pt-3 border-t border-zinc-100 px-3 space-y-1 shrink-0">
         <SidebarItem icon={<HelpIcon />} label="Feedback & Help" href="/feedback" onClick={onClose} />
         {data.isAdmin && (
           <SidebarItem icon={<ShieldIcon />} label="Admin Dashboard" href="/admin" onClick={onClose} yellow />
         )}
       </div>
 
+      {/* Scope info */}
+      <div className="mt-3 mx-3 shrink-0">
+        <div className="rounded-xl bg-zinc-50 border border-zinc-100 px-3 py-2.5">
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide mb-0.5">{roleLabel(role)}</p>
+          <p className="text-xs font-medium text-zinc-700 truncate">{data.scopeValue || data.user.email}</p>
+        </div>
+      </div>
+
       {/* User profile card */}
-      <div className="mt-auto pt-4 border-t border-zinc-100 px-3 pb-4 shrink-0">
-        <div className="rounded-2xl bg-zinc-50 p-3 flex items-center gap-3">
+      <div className="mt-auto pt-3 border-t border-zinc-100 px-3 pb-4 shrink-0">
+        <div className="rounded-xl bg-zinc-50 p-2.5 flex items-center gap-2.5">
           {data.user.image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={data.user.image} alt="" referrerPolicy="no-referrer"
-              className="w-10 h-10 rounded-xl object-cover shrink-0" />
+              className="w-9 h-9 rounded-lg object-cover shrink-0" />
           ) : (
-            <div className="w-10 h-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center font-bold text-sm shrink-0">
-              {data.user.name?.[0] ?? "?"}
+            <div className="w-9 h-9 rounded-lg bg-zinc-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
+              {data.user.name?.[0]?.toUpperCase() ?? "?"}
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold truncate">{firstName}</p>
-            <p className="text-xs text-zinc-500">{roleLabel(role)}</p>
+            <p className="text-xs font-semibold truncate">{firstName}</p>
+            <p className="text-[10px] text-zinc-500 truncate">{data.user.email}</p>
           </div>
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
             title="Sign out"
             className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+            aria-label="Sign out"
           >
             <SignOutIcon />
           </button>
@@ -449,7 +441,7 @@ function SidebarItem({
   icon: React.ReactNode; label: string; active?: boolean;
   href?: string; yellow?: boolean; onClick?: () => void;
 }) {
-  const cls = `w-full h-11 rounded-2xl flex items-center gap-3 px-4 text-sm transition-colors cursor-pointer ${
+  const cls = `w-full h-10 rounded-xl flex items-center gap-3 px-3 text-sm transition-colors cursor-pointer ${
     yellow
       ? "bg-yellow-400 text-black font-bold hover:bg-yellow-300"
       : active
@@ -473,7 +465,7 @@ function SidebarItem({
   );
 }
 
-// ── Custom dropdown (fixed-position — not clipped by overflow containers) ──
+// ── Custom dropdown ────────────────────────────────────────────────────────
 
 function FilterSelect({
   label, options, value, onChange, disabled, active,
@@ -517,21 +509,21 @@ function FilterSelect({
         type="button"
         disabled={disabled}
         onClick={() => open ? setOpen(false) : openDropdown()}
-        className="w-full h-12 flex items-center justify-between pl-4 pr-3 text-sm rounded-2xl border transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full h-11 flex items-center justify-between pl-3.5 pr-3 text-sm rounded-xl border transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         style={{
           borderColor: open || active ? "#FFC700" : "#e4e4e7",
           boxShadow: open || active ? "0 0 0 3px rgba(255,199,0,0.12)" : "none",
-          background: open ? "#fff" : "#fafafa",
+          background: disabled ? "#f9f9f9" : open ? "#fff" : "#fafafa",
           color: value ? "#3f3f46" : "#a1a1aa",
         }}
       >
-        <span className="truncate text-left">{value || `— ${label} —`}</span>
+        <span className="truncate text-left text-sm">{value || `— ${label} —`}</span>
         <motion.span
           animate={{ rotate: open ? 180 : 0 }}
           transition={{ duration: 0.15 }}
           className="shrink-0 ml-2"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
             <polyline points="6 9 12 15 18 9" />
           </svg>
@@ -555,7 +547,7 @@ function FilterSelect({
               zIndex: 9999,
               background: "#fff",
               border: "1px solid #e4e4e7",
-              borderRadius: 16,
+              borderRadius: 14,
               boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)",
               overflow: "hidden",
             }}
@@ -598,10 +590,10 @@ function PdfRow({ pdf, onOpen }: { pdf: PdfRecord; onOpen: (pdf: PdfRecord) => v
   return (
     <motion.div
       variants={fadeUp}
-      className="bg-zinc-50 border border-zinc-100 rounded-2xl px-4 py-3.5 flex items-center gap-4 transition-all duration-150 hover:border-zinc-200 hover:bg-white hover:shadow-sm"
+      className="bg-zinc-50 border border-zinc-100 rounded-xl px-4 py-3 flex items-center gap-3 transition-all duration-150 hover:border-zinc-200 hover:bg-white hover:shadow-sm"
     >
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-yellow-50 border border-yellow-100">
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#D4A000" strokeWidth={1.8}
+      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-yellow-50 border border-yellow-100">
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#D4A000" strokeWidth={1.8}
           strokeLinecap="round" strokeLinejoin="round">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
           <polyline points="14 2 14 8 20 8" />
@@ -611,24 +603,25 @@ function PdfRow({ pdf, onOpen }: { pdf: PdfRecord; onOpen: (pdf: PdfRecord) => v
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="text-[13.5px] font-semibold text-zinc-800 truncate leading-snug">
+        <div className="text-[13px] font-semibold text-zinc-800 truncate leading-snug">
           {friendlyPdfName(pdf.pdf_name)}
         </div>
-        <div className="text-[11px] text-zinc-400 mt-0.5">
+        <div className="text-[11px] text-zinc-400 mt-0.5 truncate">
           {pdf.batch} · {pdf.test_date}
         </div>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-1.5 shrink-0">
         <a href={pdf.gdrive_link} target="_blank" rel="noopener noreferrer"
           onClick={() => onOpen(pdf)}
-          className="h-9 px-4 bg-yellow-400 text-black text-xs font-bold rounded-xl hover:bg-yellow-300 transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+          className="h-8 px-3.5 bg-yellow-400 text-black text-xs font-bold rounded-lg hover:bg-yellow-300 transition-colors flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
           <OpenIcon />
           Open
         </a>
         <a href={pdf.gdrive_link} target="_blank" rel="noopener noreferrer"
           onClick={() => onOpen(pdf)} title="Download"
-          className="h-9 w-9 bg-zinc-100 text-zinc-500 rounded-xl hover:bg-zinc-200 transition-colors flex items-center justify-center cursor-pointer">
+          className="h-8 w-8 bg-zinc-100 text-zinc-500 rounded-lg hover:bg-zinc-200 transition-colors flex items-center justify-center cursor-pointer"
+          aria-label="Download">
           <DownloadSmIcon />
         </a>
       </div>
@@ -645,10 +638,10 @@ function EmptyState({ type }: { type: "select-filters" | "no-results" }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="flex flex-col items-center justify-center text-center px-8 py-14"
+      className="flex flex-col items-center justify-center text-center px-8 py-12"
     >
-      <div className="w-16 h-16 rounded-3xl bg-yellow-50 border border-yellow-100 flex items-center justify-center mb-4">
-        <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="#D4A000" strokeWidth={1.6}
+      <div className="w-14 h-14 rounded-2xl bg-yellow-50 border border-yellow-100 flex items-center justify-center mb-4">
+        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="#D4A000" strokeWidth={1.6}
           strokeLinecap="round" strokeLinejoin="round">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
           <polyline points="14 2 14 8 20 8" />
@@ -656,13 +649,13 @@ function EmptyState({ type }: { type: "select-filters" | "no-results" }) {
           <line x1="9" y1="17" x2="13" y2="17" />
         </svg>
       </div>
-      <h3 className="text-[17px] font-bold text-zinc-800 mb-2">
-        {isNoResults ? "No PDFs Found" : "Ready to Load Reports"}
+      <h3 className="text-base font-bold text-zinc-800 mb-1.5">
+        {isNoResults ? "No PDFs Found" : "Ready to Browse"}
       </h3>
       <p className="text-sm text-zinc-500 max-w-xs leading-relaxed">
         {isNoResults
-          ? "No PDFs match your current filters. Try adjusting your selection or search."
-          : "Choose Batch, Test Date and Report Type to view available PDFs."}
+          ? "No PDFs match your current filters. Try a different batch, date, or search term."
+          : "Select a batch and test date above to view available report PDFs."}
       </p>
     </motion.div>
   );
@@ -674,7 +667,7 @@ function LoadingScreen() {
   return (
     <div className="h-screen bg-[#fafaf8] flex items-center justify-center">
       <div className="text-center">
-        <div className="w-10 h-10 rounded-full border-[2.5px] border-zinc-200 border-t-yellow-400 mx-auto mb-4"
+        <div className="w-9 h-9 rounded-full border-[2.5px] border-zinc-200 border-t-yellow-400 mx-auto mb-3"
           style={{ animation: "spin 0.75s linear infinite" }} />
         <p className="text-sm text-zinc-400 font-medium">Loading workspace…</p>
       </div>
@@ -686,7 +679,7 @@ function ErrorScreen({ message }: { message: string }) {
   return (
     <div className="h-screen bg-[#fafaf8] flex items-center justify-center px-6">
       <div className="text-center max-w-sm">
-        <div className="w-14 h-14 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center mx-auto mb-5">
+        <div className="w-13 h-13 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center mx-auto mb-4">
           <svg className="w-6 h-6 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
@@ -694,11 +687,11 @@ function ErrorScreen({ message }: { message: string }) {
             <line x1="12" y1="17" x2="12.01" y2="17" />
           </svg>
         </div>
-        <h2 className="text-xl font-bold text-zinc-900 mb-2">Access Error</h2>
-        <p className="text-sm text-zinc-500 leading-relaxed mb-6">{message}</p>
+        <h2 className="text-lg font-bold text-zinc-900 mb-2">Access Error</h2>
+        <p className="text-sm text-zinc-500 leading-relaxed mb-5">{message}</p>
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
-          className="px-6 py-2.5 bg-yellow-400 text-black font-bold text-sm rounded-xl hover:bg-yellow-300 transition-colors cursor-pointer"
+          className="px-5 py-2 bg-yellow-400 text-black font-bold text-sm rounded-xl hover:bg-yellow-300 transition-colors cursor-pointer"
         >
           Sign out
         </button>
@@ -711,7 +704,7 @@ function ErrorScreen({ message }: { message: string }) {
 
 function SearchIcon({ className }: { className?: string }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className}>
       <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
@@ -731,7 +724,7 @@ function MenuIcon() {
 
 function ReportsIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
       <polyline points="14 2 14 8 20 8" />
@@ -741,39 +734,9 @@ function ReportsIcon() {
   );
 }
 
-function RecentIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
-    </svg>
-  );
-}
-
-function StarIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-    </svg>
-  );
-}
-
-function DownloadIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="7 10 12 15 17 10" />
-      <line x1="12" y1="15" x2="12" y2="3" />
-    </svg>
-  );
-}
-
 function HelpIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="10" />
       <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
@@ -784,7 +747,7 @@ function HelpIcon() {
 
 function ShieldIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
     </svg>
@@ -793,7 +756,7 @@ function ShieldIcon() {
 
 function SignOutIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
       <polyline points="16 17 21 12 16 7" />
@@ -804,7 +767,7 @@ function SignOutIcon() {
 
 function OpenIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
       <polyline points="15 3 21 3 21 9" />
@@ -815,7 +778,7 @@ function OpenIcon() {
 
 function DownloadSmIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
       <polyline points="7 10 12 15 17 10" />

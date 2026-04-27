@@ -2,13 +2,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
+import { isAdmin } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
-
-function isAdmin(email: string) {
-  const admins = (process.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim().toLowerCase());
-  return admins.includes(email.toLowerCase());
-}
 
 export async function POST() {
   let email: string;

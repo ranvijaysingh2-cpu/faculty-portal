@@ -3,14 +3,9 @@ import { authOptions } from "@/lib/auth-options";
 import { NextResponse } from "next/server";
 import { getPdfIndex, getFaculty, getHeads } from "@/lib/csv";
 import { filterPdfsForFaculty, filterPdfsForHead } from "@/lib/access";
+import { isAdmin } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
-
-function isAdmin(email: string) {
-  return (process.env.ADMIN_EMAILS ?? "")
-    .split(",").map((e) => e.trim().toLowerCase())
-    .includes(email.toLowerCase());
-}
 
 export async function GET() {
   let email: string;
