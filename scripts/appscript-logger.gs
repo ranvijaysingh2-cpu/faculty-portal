@@ -48,6 +48,20 @@ function doPost(e) {
       return json({ success: true, action: "send_reports" });
     }
 
+    // Feedback form submission → dedicated feedback tab
+    if (data.event_type === "feedback") {
+      var ss2    = SpreadsheetApp.getActiveSpreadsheet();
+      var fbSheet = getOrCreateFeedbackSheet(ss2);
+      fbSheet.appendRow([
+        data.timestamp || new Date().toISOString(),
+        data.name      || "",
+        data.role      || "",
+        data.type      || "",
+        data.message   || "",
+      ]);
+      return json({ success: true });
+    }
+
     // Default: log activity event
     var ss    = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = getOrCreateLogSheet(ss);
@@ -515,6 +529,16 @@ function getOrCreateLogSheet(ss) {
     sheet = ss.insertSheet(LOG_SHEET_NAME);
     sheet.appendRow(["timestamp","email","role","scope_value","event_type",
                      "pdf_name","batch","center","region","test_date"]);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function getOrCreateFeedbackSheet(ss) {
+  var sheet = ss.getSheetByName("feedback");
+  if (!sheet) {
+    sheet = ss.insertSheet("feedback");
+    sheet.appendRow(["timestamp","name","role","type","message"]);
     sheet.setFrozenRows(1);
   }
   return sheet;
