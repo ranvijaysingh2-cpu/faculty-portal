@@ -13,41 +13,16 @@ const ERROR_MESSAGES: Record<string, string> = {
   Default: "Sign-in failed. Please try again.",
 };
 
-const ROLES = [
-  {
-    icon: (
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
-      </svg>
-    ),
-    title: "Faculty",
-    desc: "Test PDFs for your assigned batches",
-  },
-  {
-    icon: (
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
-      </svg>
-    ),
-    title: "Center Head",
-    desc: "All results across your center",
-  },
-  {
-    icon: (
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" />
-        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-      </svg>
-    ),
-    title: "Region Head",
-    desc: "All results across your region",
-  },
+const STATS = [
+  { label: "Reports", value: "4,500+", float: "up"   as const },
+  { label: "Centers", value: "120+",   float: "down" as const },
+  { label: "Users",   value: "10k+",   float: "up"   as const },
 ];
 
-const PDF_TYPES = [
-  "Student Performance Reports",
-  "Question Level Insights",
-  "Cohort Data — JEE / NEET (Vidyapeeth)",
+const ROLES = [
+  { title: "Faculty",      desc: "Assigned batches only",  yellow: true  },
+  { title: "Center Head",  desc: "All center batches",     yellow: false },
+  { title: "Region Head",  desc: "Region-wide reports",    yellow: false },
 ];
 
 export default function SignIn({ error }: { error?: string }) {
@@ -60,208 +35,200 @@ export default function SignIn({ error }: { error?: string }) {
   }
 
   return (
-    <div
-      className="h-screen flex flex-col overflow-hidden"
-      style={{ background: "#FAFAF8" }}
-    >
-      {/* Grain texture */}
-      <div
-        className="pointer-events-none fixed inset-0 z-0"
-        style={{
-          opacity: 0.04,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-          backgroundSize: "180px 180px",
-        }}
-      />
-      {/* Ambient glow */}
-      <div
-        className="pointer-events-none fixed left-1/2 top-0 -translate-x-1/2 z-0"
-        style={{
-          width: 800,
-          height: 500,
-          background: "radial-gradient(ellipse at 50% 0%, rgba(255,199,0,0.22) 0%, rgba(255,199,0,0.05) 45%, transparent 70%)",
-        }}
-      />
+    <div className="h-screen flex flex-col bg-[#fafaf8] text-zinc-900">
 
-      {/* Navbar */}
-      <motion.header
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] as const }}
-        className="relative z-10 shrink-0 flex items-center justify-between px-5 py-4 sm:px-8"
-      >
-        <div className="flex items-center gap-2.5">
-          <div
-            className="w-8 h-8 rounded-[10px] flex items-center justify-center shadow-sm shrink-0"
-            style={{ background: "#FFC700" }}
-          >
-            <span className="font-black text-[11px] text-black tracking-tight">PW</span>
-          </div>
-          <span className="font-semibold text-gray-800 text-[13px] tracking-tight">Physics Wallah</span>
-        </div>
+      {/* ── Background ── */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        {/* Blobs */}
+        <div className="absolute top-[-120px] left-[-100px] w-80 h-80 rounded-full bg-yellow-300/30 blur-3xl" />
+        <div className="absolute bottom-[-120px] right-[-100px] w-[360px] h-[360px] rounded-full bg-yellow-200/30 blur-3xl" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[420px] h-[420px] rounded-full bg-yellow-100/40 blur-[120px]" />
+        {/* Subtle grid */}
         <div
-          className="flex items-center gap-1.5 rounded-full px-3 py-1.5"
-          style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-          <span className="text-[11px] font-semibold text-gray-400 tracking-wide">Internal</span>
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right,#000 1px,transparent 1px),linear-gradient(to bottom,#000 1px,transparent 1px)",
+            backgroundSize: "54px 54px",
+          }}
+        />
+      </div>
+
+      {/* ── Header ── */}
+      <header className="relative z-20 shrink-0 h-[72px] px-6 md:px-14 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-yellow-400 text-black font-black text-sm flex items-center justify-center shadow-md shrink-0">
+            PW
+          </div>
+          <div className="leading-tight">
+            <div className="font-semibold text-[15px] tracking-tight">PW Darpan</div>
+            <div className="text-[11px] text-zinc-500">Academic Access Portal</div>
+          </div>
         </div>
-      </motion.header>
 
-      {/* Main — vertically centered, flex-1 */}
-      <main className="relative z-10 flex-1 flex items-center justify-center px-5 overflow-hidden">
-        <div className="flex flex-col items-center w-full max-w-[388px]">
+        <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full border border-zinc-200 bg-white/80 text-sm text-zinc-600 shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
+          Secure Access
+        </div>
+      </header>
 
-          {/* Eyebrow + heading */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] as const }}
-            className="text-center mb-6"
-          >
-            <div
-              className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 mb-4"
-              style={{ background: "rgba(255,199,0,0.12)", border: "1px solid rgba(255,199,0,0.28)" }}
+      {/* ── Main ── */}
+      <main className="relative z-10 flex-1 overflow-y-auto">
+        {/* min-h-full + flex items-center → vertically centered on desktop, scrollable on mobile */}
+        <div className="min-h-full flex items-center px-6 md:px-14 py-8 lg:py-6">
+          <div className="w-full max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+
+            {/* ── Left — Hero ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] as const }}
+              className="order-2 lg:order-1"
             >
-              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: "#FFC700" }} />
-              <span className="text-[11px] font-bold tracking-[1.5px] uppercase" style={{ color: "#8A6200" }}>
-                Faculty Portal
-              </span>
-            </div>
-            <h1
-              className="font-black text-gray-950 leading-[0.9] tracking-[-0.04em] select-none"
-              style={{ fontSize: "clamp(40px, 7vw, 72px)" }}
-            >
-              Welcome<br />
-              <span style={{ color: "#FFC700" }}>Back.</span>
-            </h1>
-          </motion.div>
-
-          {/* Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 24, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: 0.12, duration: 0.55, ease: [0.16, 1, 0.3, 1] as const }}
-            className="w-full rounded-3xl p-6 sm:p-7"
-            style={{
-              background: "#fff",
-              border: "1px solid rgba(0,0,0,0.07)",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.03), 0 8px 32px rgba(0,0,0,0.07), 0 24px 64px rgba(0,0,0,0.04)",
-            }}
-          >
-            {/* Card header */}
-            <div className="text-center mb-5">
-              <h2 className="text-[15px] font-bold text-gray-900 tracking-tight mb-1">
-                Sign in to your account
-              </h2>
-              <p className="text-[12.5px] text-gray-500">
-                Use your <span className="font-semibold text-gray-700">@pw.live</span> Google account
+              <p className="uppercase tracking-[0.4em] text-xs text-yellow-500 font-semibold mb-5">
+                Performance Intelligence Platform
               </p>
-            </div>
 
-            {/* Error */}
-            <AnimatePresence>
-              {errorMsg && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8, height: 0 }}
-                  animate={{ opacity: 1, y: 0, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="overflow-hidden mb-4"
-                >
-                  <div
-                    className="flex items-start gap-2.5 p-3 rounded-xl"
-                    style={{ background: "#FFF1F0", border: "1px solid #FFD0CC" }}
+              <h1
+                className="font-black leading-[0.92] tracking-tight mb-5"
+                style={{ fontSize: "clamp(32px, 5vw, 68px)" }}
+              >
+                Har Test Ka Sach.<br />
+                <span className="text-yellow-500">Har Batch Ka Darpan.</span>
+              </h1>
+
+              <p className="text-zinc-500 text-[15px] leading-relaxed max-w-lg">
+                Access student reports, question-wise analysis, skipped &amp; wrongly
+                attempted reports securely.
+              </p>
+
+              {/* Stat cards — hidden on xs, visible sm+ */}
+              <div className="hidden sm:grid grid-cols-3 gap-4 mt-8">
+                {STATS.map((s) => (
+                  <motion.div
+                    key={s.label}
+                    animate={{ y: s.float === "up" ? [0, -8, 0] : [0, 10, 0] }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: s.float === "up" ? 6 : 8,
+                      ease: "easeInOut",
+                    }}
+                    className="bg-white border border-zinc-100 rounded-2xl p-4 shadow-sm"
                   >
-                    <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: "#EF4444" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-                    </svg>
-                    <span className="text-[12px] leading-relaxed" style={{ color: "#C0392B" }}>{errorMsg}</span>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Google button */}
-            <motion.button
-              whileHover={{ scale: 1.015, boxShadow: "0 6px 28px rgba(0,0,0,0.12)" }}
-              whileTap={{ scale: 0.985 }}
-              onClick={handleSignIn}
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-3 text-[14px] font-semibold text-gray-800 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer focus:outline-none"
-              style={{
-                padding: "12px 20px",
-                background: "#fff",
-                border: "1px solid rgba(0,0,0,0.12)",
-                borderRadius: 14,
-                boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-              }}
-              onFocus={(e) => (e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,199,0,0.35)")}
-              onBlur={(e) => (e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.06)")}
-            >
-              {loading ? (
-                <span
-                  className="w-4 h-4 rounded-full border-2 shrink-0"
-                  style={{ borderColor: "#e5e7eb", borderTopColor: "#FFC700", animation: "spin 0.75s linear infinite" }}
-                />
-              ) : <GoogleIcon />}
-              <span>{loading ? "Signing in…" : "Continue with Google"}</span>
-            </motion.button>
-
-            {/* Divider */}
-            <div className="flex items-center gap-2.5 my-4">
-              <div className="flex-1 h-px" style={{ background: "rgba(0,0,0,0.07)" }} />
-              <span className="text-[10px] font-bold tracking-[2px] whitespace-nowrap" style={{ color: "#C8C8C8" }}>
-                WHO CAN ACCESS
-              </span>
-              <div className="flex-1 h-px" style={{ background: "rgba(0,0,0,0.07)" }} />
-            </div>
-
-            {/* Role info */}
-            <div className="space-y-2 mb-4">
-              {ROLES.map((r) => (
-                <div key={r.title} className="flex items-center gap-3 rounded-xl px-3 py-2.5"
-                  style={{ background: "rgba(255,199,0,0.05)", border: "1px solid rgba(255,199,0,0.12)" }}>
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                    style={{ background: "rgba(255,199,0,0.15)", color: "#8A6200" }}>
-                    {r.icon}
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[12px] font-bold text-gray-800">{r.title}</span>
-                    <span className="text-[11px] text-gray-400 ml-1.5">{r.desc}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* PDF types */}
-            <div className="rounded-xl px-3 py-2.5" style={{ background: "rgba(0,0,0,0.025)", border: "1px solid rgba(0,0,0,0.06)" }}>
-              <p className="text-[10px] font-bold tracking-[1px] uppercase text-gray-400 mb-1.5">Available PDFs</p>
-              <ul className="space-y-1">
-                {PDF_TYPES.map((t) => (
-                  <li key={t} className="flex items-center gap-2 text-[11.5px] text-gray-500">
-                    <span className="w-1 h-1 rounded-full shrink-0" style={{ background: "#FFC700" }} />
-                    {t}
-                  </li>
+                    <p className="text-xs text-zinc-400">{s.label}</p>
+                    <h3 className="text-xl font-bold mt-1">{s.value}</h3>
+                  </motion.div>
                 ))}
-              </ul>
-            </div>
-          </motion.div>
+              </div>
+            </motion.div>
 
-          {/* Footer note */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.55, duration: 0.4 }}
-            className="text-[11px] text-center mt-4"
-            style={{ color: "#C0C0C0" }}
-          >
-            Only <span style={{ color: "#9CA3AF", fontWeight: 600 }}>@pw.live</span> accounts are permitted
-          </motion.p>
+            {/* ── Right — Login card ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.75, delay: 0.15, ease: [0.16, 1, 0.3, 1] as const }}
+              className="flex justify-center order-1 lg:order-2"
+            >
+              <div className="w-full max-w-md bg-white/90 border border-white/60 shadow-2xl rounded-[30px] p-7 backdrop-blur-sm">
+
+                {/* Card header */}
+                <div className="text-center mb-6">
+                  <div className="w-14 h-14 rounded-3xl bg-yellow-400 text-black font-black text-lg mx-auto flex items-center justify-center shadow-lg mb-4">
+                    PW
+                  </div>
+                  <h2 className="text-2xl font-bold tracking-tight">Sign in to Darpan</h2>
+                  <p className="text-zinc-500 mt-1 text-sm">
+                    Continue with your <span className="font-semibold text-zinc-700">@pw.live</span> account
+                  </p>
+                </div>
+
+                {/* Error banner */}
+                <AnimatePresence>
+                  {errorMsg && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden mb-5"
+                    >
+                      <div className="flex items-start gap-2.5 p-3.5 rounded-2xl bg-red-50 border border-red-100">
+                        <svg
+                          className="w-4 h-4 mt-0.5 shrink-0 text-red-400"
+                          viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                          strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="12" y1="8" x2="12" y2="12" />
+                          <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                        <span className="text-sm text-red-600 leading-relaxed">{errorMsg}</span>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Google sign-in button */}
+                <button
+                  onClick={handleSignIn}
+                  disabled={loading}
+                  className="w-full h-12 rounded-2xl bg-zinc-900 text-white font-semibold
+                             flex items-center justify-center gap-3
+                             hover:bg-zinc-800 hover:scale-[1.015]
+                             transition-all duration-200
+                             cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
+                             focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2"
+                >
+                  {loading ? (
+                    <span
+                      className="w-4 h-4 rounded-full border-2 border-white/25 border-t-white shrink-0"
+                      style={{ animation: "spin 0.75s linear infinite" }}
+                    />
+                  ) : (
+                    <GoogleIcon />
+                  )}
+                  <span>{loading ? "Signing in…" : "Continue with Google"}</span>
+                </button>
+
+                {/* Divider */}
+                <div className="my-6 flex items-center gap-4">
+                  <div className="h-px bg-zinc-200 flex-1" />
+                  <span className="text-[10px] tracking-[0.3em] text-zinc-400 whitespace-nowrap">
+                    ACCESS
+                  </span>
+                  <div className="h-px bg-zinc-200 flex-1" />
+                </div>
+
+                {/* Role cards */}
+                <div className="space-y-3">
+                  {ROLES.map((r) => (
+                    <div
+                      key={r.title}
+                      className={`rounded-2xl border px-4 py-3 ${
+                        r.yellow
+                          ? "border-yellow-200 bg-yellow-50"
+                          : "border-zinc-200 bg-zinc-50"
+                      }`}
+                    >
+                      <h3 className="font-semibold text-sm">{r.title}</h3>
+                      <p className="text-xs text-zinc-500 mt-0.5">{r.desc}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-center text-[11px] text-zinc-400 mt-6">
+                  Protected by Google OAuth
+                </p>
+              </div>
+            </motion.div>
+
+          </div>
         </div>
       </main>
     </div>
   );
 }
+
+// ── Icons ──────────────────────────────────────────────────────────────────────
 
 function GoogleIcon() {
   return (
